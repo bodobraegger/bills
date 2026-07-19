@@ -51,7 +51,7 @@ export function defaultSettings(): Settings {
     city: "Musterstadt",
     country: "CH",
     iban: "CH00 0000 0000 0000 0000 0",
-    email: "",
+    email: "name@example.com",
     phone: "",
     vatNumber: "",
   };

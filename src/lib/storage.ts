@@ -6,8 +6,11 @@ const DOCUMENTS_KEY = "bills.documents";
 const CURRENT_ID_KEY = "bills.currentDocumentId";
 
 export function loadSettings(): Settings {
-  const stored = readJson<Partial<Settings>>(SETTINGS_KEY);
-  return { ...defaultSettings(), ...stored };
+  const stored = readJson<Partial<Settings>>(SETTINGS_KEY) ?? {};
+  const filled = Object.fromEntries(
+    Object.entries(stored).filter(([, value]) => value !== ""),
+  );
+  return { ...defaultSettings(), ...filled };
 }
 
 export function saveSettings(settings: Settings): void {
