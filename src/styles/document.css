@@ -1,167 +1,143 @@
+@font-face {
+  font-family: "New Computer Modern Mono";
+  src: url("/fonts/NewCMMono10-Regular.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
 @page {
   size: A4;
   margin: 0;
+}
+
+.sheet {
+  --rule: 0.5pt solid #000;
+  font-family: "New Computer Modern Mono", "Courier New", monospace;
+  font-size: 11pt;
+  line-height: 1.3;
+  color: #000;
 }
 
 .doc-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16mm 16mm 8mm;
-  font-size: 10.5pt;
-  line-height: 1.45;
+  padding: 19mm 19mm 10mm;
 }
 
-.doc-header {
+.header-grid {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1.2mm solid var(--ink);
-  padding-bottom: 4mm;
 }
 
-.sender-name {
-  font-size: 16pt;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.sender-address {
-  text-align: right;
-  font-size: 8.5pt;
-  line-height: 1.5;
-}
-
-.doc-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6mm;
-  margin-top: 8mm;
-}
-
-.doc-title-row h1 {
-  margin: 0;
-  font-size: 22pt;
-  letter-spacing: 0.2em;
-  font-weight: 700;
-}
-
-.doc-number {
-  font-size: 11pt;
-  letter-spacing: 0.1em;
-}
-
-table.meta {
-  width: 100%;
+table.invoice-data {
+  border: var(--rule);
   border-collapse: collapse;
-  margin-top: 5mm;
 }
 
-table.meta td {
-  border: 0.3mm solid var(--ink);
-  padding: 2mm 3mm;
+table.invoice-data td {
+  padding: 1.5pt 5pt;
 }
 
-.cell-label {
-  font-size: 7pt;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+table.invoice-data td:last-child {
+  padding-left: 14pt;
 }
 
-.cell-value {
-  font-size: 10.5pt;
-  font-weight: 700;
-  margin-top: 1mm;
-}
-
-.client-block {
-  margin-top: 8mm;
-}
-
-.block-label {
-  font-size: 7.5pt;
-  letter-spacing: 0.2em;
-  margin-bottom: 2mm;
-}
-
-.client-address {
-  font-weight: 700;
+.billed-to {
+  margin-top: 22pt;
 }
 
 .doc-text {
-  margin: 6mm 0 0;
-  white-space: normal;
+  margin: 22pt 0 0;
+}
+
+.order-title {
+  text-align: center;
+  margin-top: 26pt;
 }
 
 table.items {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 8mm;
-  border-top: 0.8mm solid var(--ink);
-  border-bottom: 0.8mm solid var(--ink);
+  margin-top: 4pt;
 }
 
 table.items th {
-  font-size: 7.5pt;
-  letter-spacing: 0.12em;
+  font-weight: normal;
   text-align: left;
-  border-bottom: 0.3mm solid var(--ink);
-  padding: 2mm 2mm;
+  border-bottom: var(--rule);
 }
 
+table.items th,
 table.items td {
-  padding: 1.8mm 2mm;
+  padding: 1.5pt 0 1.5pt 8pt;
   vertical-align: top;
 }
 
-table.items tbody tr + tr td {
-  border-top: 0.1mm solid #999;
+table.items th:first-child,
+table.items td:first-child {
+  padding-left: 0;
 }
 
-table.items .num,
-table.totals .num {
+table.items .pos {
+  text-align: center;
+  width: 2ch;
+}
+
+table.items .num {
   text-align: right;
-  font-variant-numeric: tabular-nums;
 }
 
-table.items th.num {
+table.items th.num:nth-child(3),
+table.items td.num:nth-child(3) {
+  padding-left: 24pt;
+}
+
+table.items tr.item:last-of-type td {
+  border-bottom: var(--rule);
+}
+
+table.items .totals-label {
   text-align: right;
 }
 
-table.totals {
+table.items tr.hline-above td {
+  border-top: var(--rule);
+}
+
+table.items tr.double-line td {
+  padding: 0;
+}
+
+table.items tr.double-line div {
+  border-top: var(--rule);
+  border-bottom: var(--rule);
+  height: 3pt;
+  margin-top: 1.5pt;
+}
+
+table.payment {
   border-collapse: collapse;
-  margin-left: auto;
-  margin-top: 3mm;
-  min-width: 70mm;
+  margin-top: 26pt;
 }
 
-table.totals td {
-  padding: 1.5mm 2mm;
+table.payment td {
+  padding: 0;
 }
 
-table.totals .label {
-  font-size: 8.5pt;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding-right: 8mm;
+table.payment td:last-child {
+  padding-left: 14pt;
 }
 
-table.totals .grand-total td {
-  border-top: 0.6mm double var(--ink);
-  font-weight: 700;
-  font-size: 12pt;
+.closing {
+  text-align: center;
+  margin-top: 26pt;
 }
 
-.doc-footer {
-  margin-top: auto;
-  padding-top: 3mm;
-  border-top: 0.3mm solid var(--ink);
-  display: flex;
-  justify-content: space-between;
-  gap: 6mm;
-  font-size: 7.5pt;
-  letter-spacing: 0.03em;
+.closing > div {
+  margin-bottom: 14pt;
 }
 
 .qr-part {
@@ -176,7 +152,7 @@ table.totals .grand-total td {
 }
 
 .qr-error {
-  padding: 8mm 16mm;
+  padding: 8mm 19mm;
   font-size: 9pt;
   color: #a00;
   border-top: 0.3mm dashed #a00;

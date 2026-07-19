@@ -17,115 +17,130 @@ export function renderSheet(
   mode: DocumentMode,
 ): string {
   const totals = computeTotals(doc);
-  const title = mode === "offerte" ? "OFFERTE" : "RECHNUNG";
-  const clientLabel = mode === "offerte" ? "OFFERTE AN" : "RECHNUNG AN";
+  const label = mode === "offerte" ? "Offerte" : "Rechnung";
 
-  const metaCells = [
-    metaCell("DATUM", formatDate(doc.date)),
+  const senderLines = [
+    settings.name,
+    settings.address,
+    `${settings.zip} ${settings.city}`,
+    settings.email,
+    settings.phone,
+  ]
+    .filter(Boolean)
+    .map(escapeHtml)
+    .join("<br>");
+
+  const dataRows = [
+    [`${label} Nr.:`, doc.number],
+    ["Erstellt:", formatDate(doc.date)],
     mode === "offerte"
-      ? metaCell("GÜLTIG BIS", formatDate(doc.validUntil))
-      : metaCell("ZAHLBAR BIS", formatDate(doc.dueDate)),
-    metaCell("WÄHRUNG", doc.currency),
-  ];
-  if (settings.vatNumber) {
-    metaCells.push(metaCell("MWST-NR.", settings.vatNumber));
-  }
+      ? ["Gültig bis:", formatDate(doc.validUntil)]
+      : ["Zahlbar bis:", formatDate(doc.dueDate)],
+  ]
+    .map(
+      ([key, value]) =>
+        `<tr><td>${key}</td><td>${escapeHtml(value!)}</td></tr>`,
+    )
+    .join("");
+
+  const clientLines = [
+    doc.clientName,
+    doc.clientAddress,
+    `${doc.clientZip} ${doc.clientCity}`.trim(),
+  ]
+    .filter(Boolean)
+    .map(escapeHtml)
+    .join("<br>");
 
   const itemRows = doc.items
     .map(
       (item, index) => `
-        <tr>
-          <td class="num">${String(index + 1).padStart(2, "0")}</td>
+        <tr class="item">
+          <td class="pos">${index + 1}</td>
           <td>${escapeHtml(item.description)}</td>
-          <td class="num">${formatQuantity(item.quantity)}</td>
-          <td>${escapeHtml(item.unit)}</td>
           <td class="num">${formatMoney(item.unitPrice)}</td>
+          <td class="num">${escapeHtml(`${formatQuantity(item.quantity)} ${item.unit}`.trim())}</td>
           <td class="num">${formatMoney(item.quantity * item.unitPrice)}</td>
         </tr>`,
     )
     .join("");
 
-  const vatRow = doc.vatEnabled
-    ? `<tr>
-         <td class="label">MWST ${formatQuantity(doc.vatRate)}%</td>
-         <td class="num">${formatMoney(totals.vat)}</td>
-       </tr>`
-    : "";
-  const subtotalRow = doc.vatEnabled
-    ? `<tr>
-         <td class="label">ZWISCHENSUMME</td>
+  const doubleLine = `<tr class="double-line"><td colspan="5"><div></div></td></tr>`;
+  const totalsRows = doc.vatEnabled
+    ? `<tr class="hline-above">
+         <td colspan="4" class="totals-label">Zwischensumme</td>
          <td class="num">${formatMoney(totals.subtotal)}</td>
+       </tr>
+       <tr>
+         <td colspan="4" class="totals-label">MWST (${formatQuantity(doc.vatRate)}%)</td>
+         <td class="num">${formatMoney(totals.vat)}</td>
+       </tr>
+       ${doubleLine}
+       <tr>
+         <td colspan="4" class="totals-label">Total</td>
+         <td class="num">${formatMoney(totals.total)}</td>
        </tr>`
-    : "";
+    : `${doubleLine}
+       <tr>
+         <td colspan="4" class="totals-label">Total</td>
+         <td class="num">${formatMoney(totals.total)}</td>
+       </tr>`;
 
-  const contactParts = [settings.email, settings.phone]
-    .filter(Boolean)
-    .map(escapeHtml);
+  const paymentLines =
+    mode === "rechnung"
+      ? [
+          ["Zahlung:", `IBAN ${formatIban(settings.iban)}`],
+          settings.vatNumber ? ["MWST-Nr.:", settings.vatNumber] : null,
+        ]
+          .filter((line): line is [string, string] => line !== null)
+          .map(
+            ([key, value]) =>
+              `<tr><td>${key}</td><td>${escapeHtml(value)}</td></tr>`,
+          )
+          .join("")
+      : "";
 
   return `
     <div class="doc-body">
-      <header class="doc-header">
-        <div class="sender-name">${escapeHtml(settings.name)}</div>
-        <div class="sender-address">
-          ${escapeHtml(settings.address)}<br>
-          ${escapeHtml(`${settings.zip} ${settings.city}`)}
-          ${contactParts.length > 0 ? `<br>${contactParts.join("<br>")}` : ""}
-        </div>
-      </header>
-
-      <div class="doc-title-row">
-        <h1>${title}</h1>
-        <span class="doc-number">NR. ${escapeHtml(doc.number)}</span>
+      <div class="header-grid">
+        <div class="sender">${senderLines}</div>
+        <table class="invoice-data"><tbody>${dataRows}</tbody></table>
       </div>
 
-      <table class="meta"><tr>${metaCells.join("")}</tr></table>
-
-      <div class="client-block">
-        <div class="block-label">${clientLabel}</div>
-        <div class="client-address">
-          ${escapeHtml(doc.clientName)}<br>
-          ${multilineHtml(doc.clientAddress)}<br>
-          ${escapeHtml(`${doc.clientZip} ${doc.clientCity}`.trim())}
-        </div>
+      <div class="billed-to">
+        ${label} an:<br>
+        ${clientLines}
       </div>
 
       ${doc.introText ? `<p class="doc-text">${multilineHtml(doc.introText)}</p>` : ""}
 
+      <div class="order-title">${label} ${escapeHtml(doc.number)}</div>
+
       <table class="items">
         <thead>
           <tr>
-            <th class="num">POS.</th>
-            <th>BESCHREIBUNG</th>
-            <th class="num">MENGE</th>
-            <th>EINHEIT</th>
-            <th class="num">ANSATZ</th>
-            <th class="num">BETRAG</th>
+            <th class="pos">#</th>
+            <th>Beschreibung</th>
+            <th class="num">Ansatz</th>
+            <th class="num">Menge</th>
+            <th class="num">Betrag (${doc.currency})</th>
           </tr>
         </thead>
-        <tbody>${itemRows}</tbody>
+        <tbody>
+          ${itemRows}
+          ${totalsRows}
+        </tbody>
       </table>
 
-      <table class="totals">
-        ${subtotalRow}
-        ${vatRow}
-        <tr class="grand-total">
-          <td class="label">TOTAL ${doc.currency}${doc.vatEnabled ? "" : " (exkl. MWST)"}</td>
-          <td class="num">${formatMoney(totals.total)}</td>
-        </tr>
-      </table>
+      ${paymentLines ? `<table class="payment"><tbody>${paymentLines}</tbody></table>` : ""}
 
-      ${doc.closingText ? `<p class="doc-text">${multilineHtml(doc.closingText)}</p>` : ""}
-
-      <footer class="doc-footer">
-        <span>IBAN ${escapeHtml(formatIban(settings.iban))}</span>
-        <span>${escapeHtml(`${settings.name}, ${settings.address}, ${settings.zip} ${settings.city}`)}</span>
-      </footer>
+      <div class="closing">
+        <div>***</div>
+        ${doc.closingText ? `<div>${multilineHtml(doc.closingText)}</div>` : ""}
+        <div>${escapeHtml(settings.name)}</div>
+      </div>
     </div>
     ${mode === "rechnung" ? renderQrPart(doc, settings, totals.total) : ""}`;
-}
-
-function metaCell(label: string, value: string): string {
-  return `<td><div class="cell-label">${label}</div><div class="cell-value">${escapeHtml(value)}</div></td>`;
 }
 
 function renderQrPart(
