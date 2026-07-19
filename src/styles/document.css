@@ -1,0 +1,183 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+
+.doc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16mm 16mm 8mm;
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+.doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1.2mm solid var(--ink);
+  padding-bottom: 4mm;
+}
+
+.sender-name {
+  font-size: 16pt;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.sender-address {
+  text-align: right;
+  font-size: 8.5pt;
+  line-height: 1.5;
+}
+
+.doc-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6mm;
+  margin-top: 8mm;
+}
+
+.doc-title-row h1 {
+  margin: 0;
+  font-size: 22pt;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+}
+
+.doc-number {
+  font-size: 11pt;
+  letter-spacing: 0.1em;
+}
+
+table.meta {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5mm;
+}
+
+table.meta td {
+  border: 0.3mm solid var(--ink);
+  padding: 2mm 3mm;
+}
+
+.cell-label {
+  font-size: 7pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.cell-value {
+  font-size: 10.5pt;
+  font-weight: 700;
+  margin-top: 1mm;
+}
+
+.client-block {
+  margin-top: 8mm;
+}
+
+.block-label {
+  font-size: 7.5pt;
+  letter-spacing: 0.2em;
+  margin-bottom: 2mm;
+}
+
+.client-address {
+  font-weight: 700;
+}
+
+.doc-text {
+  margin: 6mm 0 0;
+  white-space: normal;
+}
+
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8mm;
+  border-top: 0.8mm solid var(--ink);
+  border-bottom: 0.8mm solid var(--ink);
+}
+
+table.items th {
+  font-size: 7.5pt;
+  letter-spacing: 0.12em;
+  text-align: left;
+  border-bottom: 0.3mm solid var(--ink);
+  padding: 2mm 2mm;
+}
+
+table.items td {
+  padding: 1.8mm 2mm;
+  vertical-align: top;
+}
+
+table.items tbody tr + tr td {
+  border-top: 0.1mm solid #999;
+}
+
+table.items .num,
+table.totals .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+table.items th.num {
+  text-align: right;
+}
+
+table.totals {
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-top: 3mm;
+  min-width: 70mm;
+}
+
+table.totals td {
+  padding: 1.5mm 2mm;
+}
+
+table.totals .label {
+  font-size: 8.5pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-right: 8mm;
+}
+
+table.totals .grand-total td {
+  border-top: 0.6mm double var(--ink);
+  font-weight: 700;
+  font-size: 12pt;
+}
+
+.doc-footer {
+  margin-top: auto;
+  padding-top: 3mm;
+  border-top: 0.3mm solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 6mm;
+  font-size: 7.5pt;
+  letter-spacing: 0.03em;
+}
+
+.qr-part {
+  width: 210mm;
+  break-inside: avoid;
+}
+
+.qr-part svg {
+  display: block;
+  width: 210mm;
+  height: 105mm;
+}
+
+.qr-error {
+  padding: 8mm 16mm;
+  font-size: 9pt;
+  color: #a00;
+  border-top: 0.3mm dashed #a00;
+}
