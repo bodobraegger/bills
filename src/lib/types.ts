@@ -44,16 +44,17 @@ export interface Totals {
 }
 
 export function defaultSettings(): Settings {
+  const env = import.meta.env;
   return {
-    name: "Jane Doe",
-    address: "Musterstrasse 1",
-    zip: "0000",
-    city: "Musterstadt",
-    country: "CH",
-    iban: "CH00 0000 0000 0000 0000 0",
-    email: "name@example.com",
-    phone: "",
-    vatNumber: "",
+    name: env.PUBLIC_DEFAULT_NAME ?? "",
+    address: env.PUBLIC_DEFAULT_ADDRESS ?? "",
+    zip: env.PUBLIC_DEFAULT_ZIP ?? "",
+    city: env.PUBLIC_DEFAULT_CITY ?? "",
+    country: env.PUBLIC_DEFAULT_COUNTRY ?? "CH",
+    iban: env.PUBLIC_DEFAULT_IBAN ?? "",
+    email: env.PUBLIC_DEFAULT_EMAIL ?? "",
+    phone: env.PUBLIC_DEFAULT_PHONE ?? "",
+    vatNumber: env.PUBLIC_DEFAULT_VAT_NUMBER ?? "",
   };
 }
 
