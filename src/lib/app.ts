@@ -1,5 +1,5 @@
 import type { BillDocument, DocumentMode, LineItem, Settings } from "./types";
-import { createDocument, emptyItem, suggestNumber } from "./types";
+import { cloneDocument, createDocument, emptyItem, suggestNumber } from "./types";
 import {
   loadCurrentId,
   loadDocuments,
@@ -186,7 +186,7 @@ function bindToolbar(): void {
   });
 
   query<HTMLButtonElement>("#new-document").addEventListener("click", () => {
-    const doc = createDocument(suggestNumber(documents));
+    const doc = cloneDocument(current, suggestNumber(documents));
     documents.push(doc);
     current = doc;
     persist();

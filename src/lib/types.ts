@@ -81,6 +81,20 @@ export function createDocument(number: string): BillDocument {
   };
 }
 
+export function cloneDocument(
+  source: BillDocument,
+  number: string,
+): BillDocument {
+  return {
+    ...structuredClone(source),
+    id: crypto.randomUUID(),
+    number,
+    date: isoToday(),
+    validUntil: isoDatePlusDays(30),
+    dueDate: isoDatePlusDays(30),
+  };
+}
+
 export function suggestNumber(documents: BillDocument[]): string {
   const year = new Date().getFullYear();
   const prefix = `${year}-`;
