@@ -158,13 +158,16 @@ function paginateDocBody(): void {
       forceBreak && childrenOnCurrentPage === 1 && !previousBreakWasForced;
     const effectiveForceBreak: boolean = forceBreak && !redundantForce;
 
-    // A suppressed <pb> still carries the page-break-before class, which
-    // print's CSS acts on unconditionally — screen never notices (this class
-    // has no visual effect there), but left in place it forces its own
-    // real page break regardless of what we just decided, stranding
-    // whatever came right before it (typically the repeated header) alone
-    // on a page in print only.
-    if (redundantForce && child instanceof HTMLElement) {
+    // Whatever this loop iteration decides — a redundant <pb> that gets
+    // suppressed, or a genuine one that gets a spacer inserted before
+    // `child` — that decision is now fully captured in effectiveForceBreak
+    // and the (about to be inserted) spacer. The page-break-before class
+    // itself must not survive on `child`: print's CSS acts on it
+    // unconditionally, so left in place it fires its own extra break on top
+    // of whatever we just decided, stranding the repeated header (or
+    // whatever came right before it) alone on a page in print only — screen
+    // never shows this, since the class has no visual effect there.
+    if (forceBreak && child instanceof HTMLElement) {
       child.classList.remove("page-break-before");
     }
 
