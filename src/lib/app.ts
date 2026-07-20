@@ -65,19 +65,26 @@ function renderPreview(): void {
   }
 }
 
-// Must match document.css: .doc-body's own padding, and .doc-page-slot's.
+// Must match document.css: .doc-body's own padding.
 const PAGE_MARGIN_TOP_MM = 19;
 const PAGE_MARGIN_BOTTOM_MM = 10;
 
-// The browser's native print pagination already splits an overflowing
-// .doc-body across multiple physical pages correctly (with real top/bottom
-// margins on every page, via box-decoration-break:clone in document.css),
-// but on screen it just renders as one tall box. This mirrors that: clip
-// .doc-body's pure content (no padding baked in) into one .doc-page-slot per
-// A4 page, each supplying its own fresh top/bottom padding, clipping a
-// (PAGE_HEIGHT_MM - PAGE_MARGIN_TOP_MM - PAGE_MARGIN_BOTTOM_MM)-tall window
-// via a shifted .doc-page-inner. @media print resets the clipping so print
-// keeps using the single flow it already fragments correctly on its own.
+// Print only gets .doc-body's padding once, at the very start/end of the
+// whole flow (plain CSS fragmentation "slice" behavior — see document.css
+// for why repeating it on every physical page didn't pan out). This mirrors
+// that same model for the screen preview: clip .doc-body's pure content (no
+// padding baked in) into one .doc-page-slot per A4 page via a shifted
+// .doc-page-inner. Only the first page's budget loses the top padding;
+// every page's budget conservatively reserves the bottom padding too, since
+// which page ends up last isn't known in advance and it's better to break
+// a little early than show content print will place on a following page.
+//
+// Each slot's .doc-page-inner gets an explicit JS-computed height (not a
+// fixed CSS one) — a break can land earlier than a page's full capacity
+// (e.g. a whole paragraph pushed over to avoid splitting it, or a manual
+// <pb>), and a fixed-height clip window would then still show up to its
+// full capacity regardless, duplicating that content at the top of the
+// next slot too.
 //
 // Break points land between .doc-body's top-level children (never inside
 // one, so a paragraph or table is never cut mid-content) unless a child
@@ -93,8 +100,9 @@ function paginateDocBody(): void {
   if (totalHeight <= fullPageHeightPx) return;
 
   const paddingTopPx = PAGE_MARGIN_TOP_MM * MM_TO_PX;
-  const pageContentBudgetPx =
-    (PAGE_HEIGHT_MM - PAGE_MARGIN_TOP_MM - PAGE_MARGIN_BOTTOM_MM) * MM_TO_PX;
+  const paddingBottomPx = PAGE_MARGIN_BOTTOM_MM * MM_TO_PX;
+  const budgetForPage = (pageIndex: number) =>
+    fullPageHeightPx - paddingBottomPx - (pageIndex === 0 ? paddingTopPx : 0);
 
   const children = [...docBody.children] as HTMLElement[];
   // .doc-body's own top padding is baked into these measurements (children
@@ -115,44 +123,49 @@ function paginateDocBody(): void {
     const top = childTops[i]!;
     const bottom = childBottoms[i]!;
     const forceBreak = children[i]!.classList.contains("page-break-before");
+    let budget = budgetForPage(pageStartOffsets.length - 1);
     if (
       lastChildBottom > currentPageStart &&
-      (forceBreak || bottom - currentPageStart > pageContentBudgetPx)
+      (forceBreak || bottom - currentPageStart > budget)
     ) {
       currentPageStart = lastChildBottom;
       pageStartOffsets.push(currentPageStart);
+      budget = budgetForPage(pageStartOffsets.length - 1);
     }
     // A single child (e.g. one long paragraph) can still be taller than a
     // whole page's budget even starting fresh on its own page; fall back to
     // forced breaks within it, snapped down to the child's own line-height
     // so the cut always lands cleanly between lines instead of revealing a
     // sliver of the next line before the page actually breaks.
-    while (bottom - currentPageStart > pageContentBudgetPx) {
+    while (bottom - currentPageStart > budget) {
       const lineHeightPx =
-        Number.parseFloat(getComputedStyle(children[i]!).lineHeight) ||
-        pageContentBudgetPx;
-      const rawBreak = currentPageStart + pageContentBudgetPx;
+        Number.parseFloat(getComputedStyle(children[i]!).lineHeight) || budget;
+      const rawBreak = currentPageStart + budget;
       const linesIntoChild = Math.floor((rawBreak - top) / lineHeightPx);
       const snapped = top + linesIntoChild * lineHeightPx;
       currentPageStart = snapped > currentPageStart ? snapped : rawBreak;
       pageStartOffsets.push(currentPageStart);
+      budget = budgetForPage(pageStartOffsets.length - 1);
     }
     lastChildBottom = bottom;
   }
   if (pageStartOffsets.length <= 1) return;
 
+  const pureContentEnd = childBottoms[childBottoms.length - 1]!;
   const innerHtml = docBody.innerHTML;
   const fragment = document.createDocumentFragment();
-  for (const startOffsetPx of pageStartOffsets) {
+  pageStartOffsets.forEach((startOffsetPx, index) => {
+    const endOffsetPx = pageStartOffsets[index + 1] ?? pureContentEnd;
     const slot = document.createElement("div");
     slot.className = "doc-page-slot";
     const inner = document.createElement("div");
     inner.className = "doc-page-inner";
     inner.style.marginTop = `${-startOffsetPx}px`;
+    inner.style.height = `${endOffsetPx - startOffsetPx}px`;
     inner.innerHTML = innerHtml;
     slot.append(inner);
     fragment.append(slot);
-  }
+  });
   docBody.replaceWith(fragment);
 }
 
