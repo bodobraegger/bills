@@ -101,6 +101,9 @@ function paginateDocBody(): void {
   // are pushed down by it); strip it out so offsets are relative to the
   // pure content flow, since each slot supplies its own fresh padding
   // instead of relying on it appearing once at the top of the whole thing.
+  const childTops = children.map(
+    (child) => child.getBoundingClientRect().top - docBodyTop - paddingTopPx,
+  );
   const childBottoms = children.map(
     (child) => child.getBoundingClientRect().bottom - docBodyTop - paddingTopPx,
   );
@@ -109,6 +112,7 @@ function paginateDocBody(): void {
   let currentPageStart = 0;
   let lastChildBottom = 0;
   for (let i = 0; i < children.length; i++) {
+    const top = childTops[i]!;
     const bottom = childBottoms[i]!;
     const forceBreak = children[i]!.classList.contains("page-break-before");
     if (
@@ -120,10 +124,17 @@ function paginateDocBody(): void {
     }
     // A single child (e.g. one long paragraph) can still be taller than a
     // whole page's budget even starting fresh on its own page; fall back to
-    // forced breaks within it rather than letting it silently overflow past
-    // the slot's overflow:hidden clip.
+    // forced breaks within it, snapped down to the child's own line-height
+    // so the cut always lands cleanly between lines instead of revealing a
+    // sliver of the next line before the page actually breaks.
     while (bottom - currentPageStart > pageContentBudgetPx) {
-      currentPageStart += pageContentBudgetPx;
+      const lineHeightPx =
+        Number.parseFloat(getComputedStyle(children[i]!).lineHeight) ||
+        pageContentBudgetPx;
+      const rawBreak = currentPageStart + pageContentBudgetPx;
+      const linesIntoChild = Math.floor((rawBreak - top) / lineHeightPx);
+      const snapped = top + linesIntoChild * lineHeightPx;
+      currentPageStart = snapped > currentPageStart ? snapped : rawBreak;
       pageStartOffsets.push(currentPageStart);
     }
     lastChildBottom = bottom;
