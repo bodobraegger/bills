@@ -23,6 +23,9 @@ const itemsBody = query<HTMLTableSectionElement>("#items-body");
 
 const MM_TO_PX = 96 / 25.4;
 const PAGE_HEIGHT_MM = 297;
+// Must match document.css: .doc-body's own padding.
+const PAGE_MARGIN_TOP_MM = 19;
+const PAGE_MARGIN_BOTTOM_MM = 10;
 
 init();
 
@@ -75,10 +78,6 @@ function renderPreview(): void {
     console.error("paginateDocBody failed:", error);
   }
 }
-
-// Must match document.css: .doc-body's own padding.
-const PAGE_MARGIN_TOP_MM = 19;
-const PAGE_MARGIN_BOTTOM_MM = 10;
 
 // Modeled on vue-smart-pages (github.com/Renovamen/oh-my-cv's pagination
 // package): rather than cloning content into separate cropped page boxes
