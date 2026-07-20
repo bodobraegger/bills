@@ -79,9 +79,6 @@ body {
 .document-bar select {
   flex: 1;
   min-width: 0;
-  height: 30px;
-  font-size: 13px;
-  padding: 6px 8px;
 }
 
 #new-document,
@@ -93,6 +90,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
 
 .fields h2 {
@@ -128,6 +126,23 @@ body {
   color: var(--ink);
 }
 
+/* Text/date/number inputs and selects (not textareas, which size via rows;
+   not checkboxes, which size to their native control) share one height so
+   nothing looks arbitrarily taller than its neighbor. */
+.fields input:not([type="checkbox"]),
+.fields select,
+.document-bar select {
+  height: 30px;
+}
+
+.fields textarea {
+  resize: vertical;
+}
+
+input[data-doc="number"] {
+  font-size: 15px;
+}
+
 .fields input:focus,
 .fields textarea:focus,
 .fields select:focus {
@@ -156,6 +171,7 @@ body {
 
 .checkbox input {
   width: auto;
+  height: auto;
   margin: 0;
 }
 
