@@ -19,8 +19,20 @@
   color: #000;
 }
 
+.doc-body,
+.qr-page {
+  width: 210mm;
+  min-height: 297mm;
+}
+
+@media print {
+  .doc-body,
+  .qr-page {
+    min-height: 296mm;
+  }
+}
+
 .doc-body {
-  flex: 1;
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
@@ -131,6 +143,11 @@ table.payment td:last-child {
   padding-left: 14pt;
 }
 
+.qr-note {
+  margin: 8pt 0 0;
+  font-size: 9pt;
+}
+
 .closing {
   text-align: center;
   margin-top: 26pt;
@@ -140,8 +157,21 @@ table.payment td:last-child {
   margin-bottom: 14pt;
 }
 
+.qr-page {
+  break-before: page;
+  page-break-before: always;
+  display: flex;
+  flex-direction: column;
+}
+
+.qr-page-label {
+  padding: 19mm 19mm 0;
+  font-size: 9pt;
+}
+
 .qr-part {
   width: 210mm;
+  margin-top: auto;
   break-inside: avoid;
 }
 

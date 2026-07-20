@@ -133,6 +133,7 @@ export function renderSheet(
       </table>
 
       ${paymentLines ? `<table class="payment"><tbody>${paymentLines}</tbody></table>` : ""}
+      ${mode === "rechnung" ? `<p class="qr-note">Der QR-Zahlteil befindet sich auf Seite 2.</p>` : ""}
 
       <div class="closing">
         <div>***</div>
@@ -140,7 +141,15 @@ export function renderSheet(
         <div>${escapeHtml(settings.name)}</div>
       </div>
     </div>
-    ${mode === "rechnung" ? renderQrPart(doc, settings, totals.total) : ""}`;
+    ${mode === "rechnung" ? renderQrPage(doc, settings, totals.total) : ""}`;
+}
+
+function renderQrPage(doc: BillDocument, settings: Settings, total: number): string {
+  return `
+    <div class="qr-page">
+      <div class="qr-page-label">${escapeHtml(`Rechnung ${doc.number}`)} · Zahlteil</div>
+      ${renderQrPart(doc, settings, total)}
+    </div>`;
 }
 
 function renderQrPart(
