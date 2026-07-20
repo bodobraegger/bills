@@ -53,7 +53,16 @@ function persist(): void {
 function renderPreview(): void {
   sheet.innerHTML = renderSheet(current, settings, previewMode);
   sheet.className = `sheet ${previewMode}`;
-  paginateDocBody();
+  // Pagination is a screen-only cosmetic enhancement; it must never be able
+  // to break the rest of the app (in particular printAs(), which calls
+  // renderPreview() synchronously before window.print() — an uncaught
+  // exception here would silently abort that call chain and the print
+  // dialog would never open).
+  try {
+    paginateDocBody();
+  } catch (error) {
+    console.error("paginateDocBody failed:", error);
+  }
 }
 
 const PAGE_BOTTOM_MARGIN_MM = 8;
