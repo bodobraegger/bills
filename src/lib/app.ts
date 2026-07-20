@@ -199,18 +199,22 @@ function paginateDocBody(): void {
   // "continued" note too, and the same "fill out the rest of the current
   // page" margin treatment an internal break gets, for a consistent look
   // between an ordinary content page break and the transition into the
-  // QR-bill page. That margin is skipped only when doc-body fits on a
-  // single page with no repeated header/note added at all — its own
-  // min-height:297mm already pads it out to a full page, and adding this
-  // too would double it.
+  // QR-bill page. That margin is skipped whenever pageIndex is 0 (no
+  // internal break ever fired, i.e. all of doc-body's content fit within
+  // budgetForPage(0)): its own min-height:297mm (document.css) then clamps
+  // doc-body's rendered box to exactly one page regardless of how far
+  // short the actual content falls of that, so its bottom edge already
+  // sits exactly at the page seam — adding this margin on top would double
+  // that gap. For pageIndex > 0, doc-body's total content already spans
+  // pageIndex full pages, far past where min-height could have any effect,
+  // so the fill-to-page-bottom math is exact there.
   const qrDivider = docBody.nextElementSibling;
   if (qrDivider instanceof HTMLElement && qrDivider.classList.contains("doc-page-break")) {
-    const singleUnpaddedPage = pageIndex === 0 && childrenOnCurrentPage === 1;
-    if (singleUnpaddedPage) {
+    const note = continuedNote.cloneNode(true) as HTMLElement;
+    docBody.append(note);
+    if (pageIndex === 0) {
       qrDivider.style.marginTop = "0px";
     } else {
-      const note = continuedNote.cloneNode(true) as HTMLElement;
-      docBody.append(note);
       pageHeightSoFar += continuedNoteHeight;
       qrDivider.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
     }
@@ -414,11 +418,7 @@ function bindToolbar(): void {
   }
   updateModeButtons();
 
-  for (const button of queryAll<HTMLButtonElement>("[data-print]")) {
-    button.addEventListener("click", () => {
-      printAs(button.dataset.print as DocumentMode);
-    });
-  }
+  query<HTMLButtonElement>("#download-pdf").addEventListener("click", printCurrent);
 }
 
 function bindYamlButtons(): void {
@@ -471,24 +471,16 @@ function updateModeButtons(): void {
   }
 }
 
-function printAs(mode: DocumentMode): void {
-  const previousMode = previewMode;
+function printCurrent(): void {
   const previousTitle = document.title;
 
-  previewMode = mode;
-  updateModeButtons();
-  renderPreview();
-
-  const label = mode === "offerte" ? "Offerte" : "Rechnung";
+  const label = previewMode === "offerte" ? "Offerte" : "Rechnung";
   document.title = [current.number, label].filter(Boolean).join("-");
 
   window.addEventListener(
     "afterprint",
     () => {
       document.title = previousTitle;
-      previewMode = previousMode;
-      updateModeButtons();
-      renderPreview();
     },
     { once: true },
   );
