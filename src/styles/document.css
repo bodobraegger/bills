@@ -40,22 +40,29 @@
 
 /* Screen-only pagination: paginateDocBody() in app.ts inserts one of these
    directly into .doc-body's own content flow at each break point (content
-   is never cloned or cropped, so it can't end up shown twice). On screen
-   its JS-computed margin-top roughly pushes what follows down to the next
-   page, with the border as a visual divider; print ignores that margin and
-   uses its own reliable break-before:page instead, so print's correctness
-   never depends on the JS height math being exactly right. */
+   is never cloned or cropped, so it can't end up shown twice), and
+   renderSheet() renders a plain (non-forcing) one before the QR-bill page
+   so that transition looks the same on screen. On screen a JS-computed
+   margin-top roughly pushes what follows down to the next page, with the
+   border as a visual divider. print resets that margin/border on all of
+   them; only .doc-page-break--forced additionally gets break-before:page,
+   since .qr-page already forces its own break — giving the plain divider
+   right before it the same break-before would push an empty page in
+   between (the divider's own forced page, then .qr-page's on top of it). */
 .doc-page-break {
   border-top: 0.5mm solid #000;
 }
 
 @media print {
   .doc-page-break {
-    break-before: page;
-    page-break-before: always;
     margin-top: 0 !important;
     padding-bottom: 0 !important;
     border: none;
+  }
+
+  .doc-page-break--forced {
+    break-before: page;
+    page-break-before: always;
   }
 }
 

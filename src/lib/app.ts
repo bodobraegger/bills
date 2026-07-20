@@ -90,14 +90,16 @@ function paginateDocBody(): void {
   if (!docBody) return;
 
   const fullPageHeightPx = PAGE_HEIGHT_MM * MM_TO_PX;
-  const totalHeight = docBody.getBoundingClientRect().height;
-  if (totalHeight <= fullPageHeightPx) return;
-
   const paddingTopPx = PAGE_MARGIN_TOP_MM * MM_TO_PX;
   const paddingBottomPx = PAGE_MARGIN_BOTTOM_MM * MM_TO_PX;
   const contentBudgetPx = fullPageHeightPx - paddingTopPx - paddingBottomPx;
 
+  // Runs even for a single-page document (no internal breaks needed) since
+  // the trailing pageHeightSoFar is also used below to size the QR-page
+  // divider, which needs to know how much of the last doc-body page is
+  // already used.
   let pageHeightSoFar = 0;
+  let hadInternalBreak = false;
   for (const child of [...docBody.children]) {
     if (child instanceof HTMLElement && child.classList.contains("doc-page-break")) {
       continue;
@@ -112,13 +114,29 @@ function paginateDocBody(): void {
 
     if (pageHeightSoFar > 0 && (forceBreak || pageHeightSoFar + childHeight > contentBudgetPx)) {
       const spacer = document.createElement("div");
-      spacer.className = "doc-page-break";
+      spacer.className = "doc-page-break doc-page-break--forced";
       spacer.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
       spacer.style.paddingBottom = `${paddingBottomPx}px`;
       docBody.insertBefore(spacer, child);
       pageHeightSoFar = 0;
+      hadInternalBreak = true;
     }
     pageHeightSoFar += childHeight;
+  }
+
+  // The plain (non --forced) divider rendered in render.ts right before
+  // .qr-page, if this is a Rechnung — same "fill out the rest of the
+  // current page" treatment as an internal break, for a consistent look
+  // between an ordinary content page break and the transition into the
+  // QR-bill page. Only needed when doc-body actually spans multiple pages:
+  // for a single-page document, .doc-body's own min-height:297mm already
+  // pads it out to a full page's worth of blank space, so adding this too
+  // would double it.
+  const qrDivider = docBody.nextElementSibling;
+  if (qrDivider instanceof HTMLElement && qrDivider.classList.contains("doc-page-break")) {
+    qrDivider.style.marginTop = hadInternalBreak
+      ? `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`
+      : "0px";
   }
 }
 

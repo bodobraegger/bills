@@ -331,15 +331,15 @@ button.primary:hover {
   padding: 24px;
 }
 
+/* One continuous "paper" surface for the whole preview — .doc-body, any
+   .doc-page-break divider lines, and .qr-page all just stack inside it as
+   plain content, so a page transition always looks the same (a divider
+   line) whether it's an ordinary content page break or the transition into
+   the QR-bill page, instead of the QR page looking like a separate
+   floating card. */
 .sheet {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8mm;
-}
-
-.doc-body,
-.qr-page {
+  width: 210mm;
+  margin: 0 auto;
   background: var(--paper);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
@@ -367,11 +367,8 @@ button.primary:hover {
   }
 
   .sheet {
-    gap: 0;
-  }
-
-  .doc-body,
-  .qr-page {
+    width: auto;
+    margin: 0;
     box-shadow: none;
   }
 }

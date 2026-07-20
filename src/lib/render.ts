@@ -133,7 +133,7 @@ export function renderSheet(
         <div>${escapeHtml(settings.name)}</div>
       </div>
     </div>
-    ${mode === "rechnung" ? renderQrPage(doc, settings, totals.total) : ""}`;
+    ${mode === "rechnung" ? `<div class="doc-page-break"></div>${renderQrPage(doc, settings, totals.total)}` : ""}`;
 }
 
 function renderItemRows(items: LineItem[], depth = 0): string {
