@@ -52,6 +52,7 @@ body {
   background: var(--paper);
   border-right: 2px solid var(--line);
   overflow-y: auto;
+  scrollbar-gutter: stable;
   padding: 16px;
 }
 
