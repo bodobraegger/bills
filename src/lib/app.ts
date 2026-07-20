@@ -100,6 +100,8 @@ function paginateDocBody(): void {
   // already used.
   let pageHeightSoFar = 0;
   let hadInternalBreak = false;
+  let childrenOnCurrentPage = 0;
+  let previousBreakWasForced = false;
   for (const child of [...docBody.children]) {
     if (child instanceof HTMLElement && child.classList.contains("doc-page-break")) {
       continue;
@@ -111,17 +113,29 @@ function paginateDocBody(): void {
       (Number.parseFloat(style.marginBottom) || 0);
     const forceBreak =
       child instanceof HTMLElement && child.classList.contains("page-break-before");
+    const overflow: boolean = pageHeightSoFar + childHeight > contentBudgetPx;
+    // A <pb> landing right after another break (this page has had exactly
+    // one child so far) would strand that lone child alone on a near-empty
+    // page — redundant with the break that just happened, unless that prior
+    // break was also forced (consecutive <pb>s are a deliberate blank
+    // page, so those should still stack).
+    const redundantForce: boolean =
+      forceBreak && childrenOnCurrentPage === 1 && !previousBreakWasForced;
+    const effectiveForceBreak: boolean = forceBreak && !redundantForce;
 
-    if (pageHeightSoFar > 0 && (forceBreak || pageHeightSoFar + childHeight > contentBudgetPx)) {
+    if (pageHeightSoFar > 0 && (effectiveForceBreak || overflow)) {
       const spacer = document.createElement("div");
       spacer.className = "doc-page-break doc-page-break--forced";
       spacer.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
       spacer.style.paddingBottom = `${paddingBottomPx}px`;
       docBody.insertBefore(spacer, child);
       pageHeightSoFar = 0;
+      childrenOnCurrentPage = 0;
+      previousBreakWasForced = effectiveForceBreak;
       hadInternalBreak = true;
     }
     pageHeightSoFar += childHeight;
+    childrenOnCurrentPage++;
   }
 
   // The plain (non --forced) divider rendered in render.ts right before

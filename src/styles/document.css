@@ -53,6 +53,16 @@
   border-top: 0.5mm solid #000;
 }
 
+/* Internal breaks are children of the padded .doc-body, so without this
+   they'd only span its content box (172mm) instead of the full page width;
+   negative side margins counteract that padding to bleed to the full
+   210mm. The plain divider before .qr-page is a direct child of the
+   unpadded .sheet, already full width, so it must not get this too. */
+.doc-body > .doc-page-break {
+  margin-left: -19mm;
+  margin-right: -19mm;
+}
+
 @media print {
   .doc-page-break {
     margin-top: 0 !important;
