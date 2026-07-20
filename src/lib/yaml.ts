@@ -1,5 +1,5 @@
 import { dump, load } from "js-yaml";
-import type { BillDocument, LineItem } from "./types";
+import type { BillDocument, LineItem, Settings } from "./types";
 import { emptyItem, isoDatePlusDays, isoToday } from "./types";
 
 interface YamlItem {
@@ -10,6 +10,18 @@ interface YamlItem {
   items?: YamlItem[];
 }
 
+interface YamlSender {
+  name?: string;
+  address?: string;
+  zip?: string;
+  city?: string;
+  country?: string;
+  iban?: string;
+  email?: string;
+  phone?: string;
+  vatNumber?: string;
+}
+
 interface YamlDocument {
   number: string;
   date: string;
@@ -17,6 +29,7 @@ interface YamlDocument {
   dueDate?: string;
   currency?: string;
   vat?: { enabled?: boolean; rate?: number };
+  sender?: YamlSender;
   client?: {
     name?: string;
     address?: string;
@@ -26,6 +39,11 @@ interface YamlDocument {
   intro?: string;
   items: YamlItem[];
   outro?: string;
+}
+
+export interface YamlImportResult {
+  document: BillDocument;
+  sender?: Settings;
 }
 
 function itemToYaml(item: LineItem): YamlItem {
@@ -61,7 +79,7 @@ function itemFromYaml(item: YamlItem): LineItem {
   };
 }
 
-export function documentToYaml(doc: BillDocument): string {
+export function documentToYaml(doc: BillDocument, settings: Settings): string {
   const yamlDoc: YamlDocument = {
     number: doc.number,
     date: doc.date,
@@ -69,6 +87,17 @@ export function documentToYaml(doc: BillDocument): string {
     dueDate: doc.dueDate,
     currency: doc.currency,
     vat: { enabled: doc.vatEnabled, rate: doc.vatRate },
+    sender: {
+      name: settings.name,
+      address: settings.address,
+      zip: settings.zip,
+      city: settings.city,
+      country: settings.country,
+      iban: settings.iban,
+      email: settings.email || undefined,
+      phone: settings.phone || undefined,
+      vatNumber: settings.vatNumber || undefined,
+    },
     client: {
       name: doc.clientName,
       address: doc.clientAddress,
@@ -82,7 +111,7 @@ export function documentToYaml(doc: BillDocument): string {
   return dump(yamlDoc, { lineWidth: 100 });
 }
 
-export function documentFromYaml(text: string): BillDocument {
+export function documentFromYaml(text: string): YamlImportResult {
   const parsed = load(text);
   if (typeof parsed !== "object" || parsed === null) {
     throw new Error("YAML muss ein Objekt sein");
@@ -90,7 +119,7 @@ export function documentFromYaml(text: string): BillDocument {
   const yamlDoc = parsed as Partial<YamlDocument>;
   const items = (yamlDoc.items ?? []).map(itemFromYaml);
 
-  return {
+  const document: BillDocument = {
     id: crypto.randomUUID(),
     number: yamlDoc.number ? toYamlString(yamlDoc.number) : "",
     date: yamlDoc.date ? toYamlString(yamlDoc.date) : isoToday(),
@@ -109,4 +138,19 @@ export function documentFromYaml(text: string): BillDocument {
     vatRate: toOptionalNumber(yamlDoc.vat?.rate) ?? 8.1,
     currency: toYamlString(yamlDoc.currency) === "EUR" ? "EUR" : "CHF",
   };
+
+  if (!yamlDoc.sender) return { document };
+
+  const sender: Settings = {
+    name: toYamlString(yamlDoc.sender.name),
+    address: toYamlString(yamlDoc.sender.address),
+    zip: toYamlString(yamlDoc.sender.zip),
+    city: toYamlString(yamlDoc.sender.city),
+    country: yamlDoc.sender.country ? toYamlString(yamlDoc.sender.country) : "CH",
+    iban: toYamlString(yamlDoc.sender.iban),
+    email: toYamlString(yamlDoc.sender.email),
+    phone: toYamlString(yamlDoc.sender.phone),
+    vatNumber: toYamlString(yamlDoc.sender.vatNumber),
+  };
+  return { document, sender };
 }

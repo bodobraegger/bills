@@ -60,6 +60,13 @@ function bindSettingsInputs(): void {
   }
 }
 
+function refreshSettingsFields(): void {
+  for (const input of queryAll<HTMLInputElement>("[data-setting]")) {
+    const key = input.dataset.setting as keyof Settings;
+    input.value = settings[key];
+  }
+}
+
 function bindDocumentInputs(): void {
   for (const input of queryAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
     "[data-doc]",
@@ -247,7 +254,7 @@ function bindToolbar(): void {
 
 function bindYamlButtons(): void {
   query<HTMLButtonElement>("#export-yaml").addEventListener("click", () => {
-    const blob = new Blob([documentToYaml(current)], { type: "text/yaml" });
+    const blob = new Blob([documentToYaml(current, settings)], { type: "text/yaml" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -268,10 +275,15 @@ function bindYamlButtons(): void {
     file
       .text()
       .then((text) => {
-        const doc = documentFromYaml(text);
+        const { document: doc, sender } = documentFromYaml(text);
         if (!doc.number) doc.number = suggestNumber(documents);
         documents.push(doc);
         current = doc;
+        if (sender) {
+          settings = sender;
+          saveSettings(settings);
+          refreshSettingsFields();
+        }
         persist();
         refreshEditor();
         renderPreview();
