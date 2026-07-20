@@ -15,7 +15,7 @@ sender:
   email: bodo@bbo.do
 client:
   name: Beispiel AG
-  address: Musterwstrasse 12
+  address: Musterstrasse 12
   zip: "3000"
   city: Bern
 intro: |
