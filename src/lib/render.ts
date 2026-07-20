@@ -12,14 +12,16 @@ import {
   renderTextBlocks,
 } from "./format";
 
-export function renderSheet(
+// Shared by renderSheet() (the first page's real header) and renderQrPage()
+// (a second, independent copy for the QR-bill page, which — being a fixed
+// single page rendered separately from .doc-body — doesn't go through
+// paginateDocBody()'s clone-per-page logic; content pages 2+ get their
+// header from cloning whichever one renderSheet() produced here).
+function renderHeaderGrid(
   doc: BillDocument,
   settings: Settings,
-  mode: DocumentMode,
+  label: string,
 ): string {
-  const totals = computeTotals(doc);
-  const label = mode === "offerte" ? "Offerte" : "Rechnung";
-
   const senderLines = [
     settings.name,
     settings.address,
@@ -34,7 +36,7 @@ export function renderSheet(
   const dataRows = [
     [`${label} Nr.:`, doc.number],
     ["Erstellt:", formatDate(doc.date)],
-    mode === "offerte"
+    label === "Offerte"
       ? ["Gültig bis:", formatDate(doc.validUntil)]
       : ["Zahlbar bis:", formatDate(doc.dueDate)],
   ]
@@ -43,6 +45,21 @@ export function renderSheet(
         `<tr><td>${key}</td><td>${escapeHtml(value!)}</td></tr>`,
     )
     .join("");
+
+  return `
+    <div class="header-grid">
+      <div class="sender">${senderLines}</div>
+      <table class="invoice-data"><tbody>${dataRows}</tbody></table>
+    </div>`;
+}
+
+export function renderSheet(
+  doc: BillDocument,
+  settings: Settings,
+  mode: DocumentMode,
+): string {
+  const totals = computeTotals(doc);
+  const label = mode === "offerte" ? "Offerte" : "Rechnung";
 
   const clientLines = [
     doc.clientName,
@@ -92,10 +109,7 @@ export function renderSheet(
 
   return `
     <div class="doc-body">
-      <div class="header-grid">
-        <div class="sender">${senderLines}</div>
-        <table class="invoice-data"><tbody>${dataRows}</tbody></table>
-      </div>
+      ${renderHeaderGrid(doc, settings, label)}
 
       <div class="billed-to">
         ${label} an:<br>
@@ -176,6 +190,7 @@ function renderItemRows(items: LineItem[], depth = 0): string {
 function renderQrPage(doc: BillDocument, settings: Settings, total: number): string {
   return `
     <div class="qr-page">
+      ${renderHeaderGrid(doc, settings, "Rechnung")}
       <div class="qr-page-label">${escapeHtml(`Rechnung ${doc.number}`)} · Zahlteil</div>
       ${renderQrPart(doc, settings, total)}
     </div>`;

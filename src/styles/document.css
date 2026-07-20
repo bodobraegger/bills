@@ -222,10 +222,18 @@ table.payment {
   page-break-before: always;
   display: flex;
   flex-direction: column;
+
+  /* .header-grid normally relies on .doc-body's own padding for its 19mm
+     inset; .qr-page has none (the QR-bill SVG below needs to stay flush to
+     the physical page edges per the standard), so its own copy needs the
+     inset applied directly instead. */
+  > .header-grid {
+    padding: 19mm 19mm 0;
+  }
 }
 
 .qr-page-label {
-  padding: 19mm 19mm 0;
+  padding: 8mm 19mm 0;
   font-size: 9pt;
 }
 
