@@ -23,11 +23,8 @@
 .qr-page {
   width: 210mm;
   min-height: 297mm;
-}
 
-@media print {
-  .doc-body,
-  .qr-page {
+  @media print {
     min-height: 296mm;
   }
 }
@@ -36,6 +33,16 @@
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
+
+  /* Internal breaks are children of this padded box, so without this they'd
+     only span its content box (172mm) instead of the full page width;
+     negative side margins counteract the padding to bleed to the full
+     210mm. The plain divider before .qr-page is a direct child of the
+     unpadded .sheet, already full width, so it must not get this too. */
+  > .doc-page-break {
+    margin-left: -19mm;
+    margin-right: -19mm;
+  }
 }
 
 /* Screen-only pagination: paginateDocBody() in app.ts inserts one of these
@@ -51,28 +58,18 @@
    between (the divider's own forced page, then .qr-page's on top of it). */
 .doc-page-break {
   border-top: 0.5mm solid #000;
-}
 
-/* Internal breaks are children of the padded .doc-body, so without this
-   they'd only span its content box (172mm) instead of the full page width;
-   negative side margins counteract that padding to bleed to the full
-   210mm. The plain divider before .qr-page is a direct child of the
-   unpadded .sheet, already full width, so it must not get this too. */
-.doc-body > .doc-page-break {
-  margin-left: -19mm;
-  margin-right: -19mm;
-}
-
-@media print {
-  .doc-page-break {
-    margin-top: 0 !important;
+  @media print {
+    margin: 0 !important;
     padding-bottom: 0 !important;
     border: none;
   }
 
-  .doc-page-break--forced {
-    break-before: page;
-    page-break-before: always;
+  &--forced {
+    @media print {
+      break-before: page;
+      page-break-before: always;
+    }
   }
 }
 
@@ -85,14 +82,14 @@
 table.invoice-data {
   border: var(--rule);
   border-collapse: collapse;
-}
 
-table.invoice-data td {
-  padding: 1.5pt 5pt;
-}
+  td {
+    padding: 1.5pt 5pt;
 
-table.invoice-data td:last-child {
-  padding-left: 14pt;
+    &:last-child {
+      padding-left: 14pt;
+    }
+  }
 }
 
 .billed-to {
@@ -120,77 +117,80 @@ table.items {
   width: 100%;
   border-collapse: collapse;
   margin-top: 4pt;
-}
 
-table.items th {
-  font-weight: normal;
-  text-align: left;
-  border-bottom: var(--rule);
-}
+  th {
+    font-weight: normal;
+    text-align: left;
+    border-bottom: var(--rule);
+  }
 
-table.items th,
-table.items td {
-  padding: 1.5pt 0 1.5pt 8pt;
-  vertical-align: top;
-}
+  th,
+  td {
+    padding: 1.5pt 0 1.5pt 8pt;
+    vertical-align: top;
 
-table.items th:first-child,
-table.items td:first-child {
-  padding-left: 0;
-}
+    &:first-child {
+      padding-left: 0;
+    }
+  }
 
-table.items .pos {
-  text-align: center;
-  width: 2ch;
-}
+  .pos {
+    text-align: center;
+    width: 2ch;
+  }
 
-table.items .num {
-  text-align: right;
-}
+  .num {
+    text-align: right;
+  }
 
-table.items th.num:nth-child(3),
-table.items td.num:nth-child(3) {
-  padding-left: 24pt;
-}
+  th.num:nth-child(3),
+  td.num:nth-child(3) {
+    padding-left: 24pt;
+  }
 
-table.items tr.item:last-of-type td {
-  border-bottom: var(--rule);
-}
+  tr {
+    &.item:last-of-type td {
+      border-bottom: var(--rule);
+    }
 
-table.items tr.section td {
-  font-weight: bold;
-}
+    &.section td {
+      font-weight: bold;
+    }
 
-table.items .totals-label {
-  text-align: right;
-}
+    &.hline-above td {
+      border-top: var(--rule);
+    }
 
-table.items tr.hline-above td {
-  border-top: var(--rule);
-}
+    &.double-line {
+      td {
+        padding: 0;
+      }
 
-table.items tr.double-line td {
-  padding: 0;
-}
+      div {
+        border-top: var(--rule);
+        border-bottom: var(--rule);
+        height: 3pt;
+        margin-top: 1.5pt;
+      }
+    }
+  }
 
-table.items tr.double-line div {
-  border-top: var(--rule);
-  border-bottom: var(--rule);
-  height: 3pt;
-  margin-top: 1.5pt;
+  .totals-label {
+    text-align: right;
+  }
 }
 
 table.payment {
   border-collapse: collapse;
   margin-top: 26pt;
-}
 
-table.payment td {
-  padding: 0;
-}
+  td {
+    padding: 0;
 
-table.payment td:last-child {
-  padding-left: 14pt;
+    &:last-child {
+      padding-left: 14pt;
+    }
+  }
 }
 
 .qr-note {
@@ -201,10 +201,10 @@ table.payment td:last-child {
 .closing {
   text-align: center;
   margin-top: 26pt;
-}
 
-.closing > div {
-  margin-bottom: 14pt;
+  > div {
+    margin-bottom: 14pt;
+  }
 }
 
 .qr-page {
@@ -223,12 +223,12 @@ table.payment td:last-child {
   width: 210mm;
   margin-top: auto;
   break-inside: avoid;
-}
 
-.qr-part svg {
-  display: block;
-  width: 210mm;
-  height: 105mm;
+  svg {
+    display: block;
+    width: 210mm;
+    height: 105mm;
+  }
 }
 
 .qr-error {
