@@ -77,6 +77,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  break-inside: avoid;
 }
 
 /* paginateDocBody() (app.ts) clones .header-grid to the top of every page
