@@ -112,11 +112,27 @@ body {
 
 .fields input,
 .fields textarea,
-.fields select,
-.document-bar select {
+.fields select {
   display: block;
   width: 100%;
   margin-top: 3px;
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* No margin-top here: unlike .fields inputs (stacked below label text),
+   this select sits directly in the .document-bar flex row next to the
+   +/delete buttons, which have no such margin either — adding one here
+   pushed the select 3px lower than its neighbors, reading as "the buttons
+   are higher than the dropdown". */
+.document-bar select {
+  display: block;
+  width: 100%;
   padding: 6px 8px;
   font-family: var(--mono);
   font-size: 13px;
@@ -170,9 +186,11 @@ input[data-doc="number"] {
 }
 
 .checkbox input {
-  width: auto;
-  height: auto;
+  width: 14px;
+  height: 14px;
   margin: 0;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .vat-row {
@@ -231,6 +249,7 @@ input[data-doc="number"] {
 }
 
 button {
+  margin: 0;
   font-family: var(--mono);
   font-size: 12px;
   text-transform: uppercase;
