@@ -82,6 +82,16 @@
   break-inside: avoid;
 }
 
+/* .doc-body's own top padding only applies once, at the true start of its
+   (sliced, not cloned) fragmented box — a header clone landing mid-flow
+   after a forced page break gets none of it and would sit flush against the
+   physical page edge, so it needs its own, same as .qr-page's header. */
+@media print {
+  .doc-body > .header-grid:not(:first-child) {
+    padding-top: 19mm;
+  }
+}
+
 /* paginateDocBody() (app.ts) clones .header-grid to the top of every page
    after the first, and appends one of these before each page break so
    every page but the last says so at the bottom. */
