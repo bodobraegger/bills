@@ -355,7 +355,8 @@ function bindYamlButtons(): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${current.number || "dokument"}.yaml`;
+    const label = previewMode === "offerte" ? "Offerte" : "Rechnung";
+    link.download = `${current.number || "dokument"}-${label}.yaml`;
     link.click();
     URL.revokeObjectURL(url);
   });
@@ -407,8 +408,7 @@ function printAs(mode: DocumentMode): void {
   renderPreview();
 
   const label = mode === "offerte" ? "Offerte" : "Rechnung";
-  const client = current.clientName.replace(/\s+/g, "-");
-  document.title = [label, current.number, client].filter(Boolean).join("_");
+  document.title = [current.number, label].filter(Boolean).join("-");
 
   window.addEventListener(
     "afterprint",
