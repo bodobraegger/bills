@@ -79,7 +79,6 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  break-inside: avoid;
 }
 
 /* .doc-body's own top padding only applies once, at the true start of its
