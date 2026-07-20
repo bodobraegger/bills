@@ -16,78 +16,80 @@ import "../styles/document.css";
   <body>
     <div class="app">
       <aside class="editor">
-        <header class="editor-header">
-          <h1>BILLS</h1>
-          <div class="document-bar">
-            <select id="document-select" title="Dokument wählen"></select>
-            <button type="button" id="new-document" title="Neues Dokument">+</button>
-            <button type="button" id="delete-document" title="Dokument löschen">🗑</button>
-          </div>
-          <div class="document-bar">
-            <button type="button" id="export-yaml">YAML exportieren</button>
-            <button type="button" id="import-yaml">YAML importieren</button>
-            <input type="file" id="import-yaml-input" accept=".yaml,.yml" hidden />
-          </div>
-        </header>
-
-        <section class="fields">
-          <div class="field-row">
-            <label>Nr.<input type="text" data-doc="number" /></label>
-            <label>Datum<input type="date" data-doc="date" /></label>
-          </div>
-          <div class="field-row">
-            <label>Gültig bis (Offerte)<input type="date" data-doc="validUntil" /></label>
-            <label>Zahlbar bis (Rechnung)<input type="date" data-doc="dueDate" /></label>
-          </div>
-
-          <h2>Kunde</h2>
-          <label>Name<input type="text" data-doc="clientName" /></label>
-          <label>Strasse / Nr.<input type="text" data-doc="clientAddress" /></label>
-          <div class="field-row zip-city">
-            <label>PLZ<input type="text" data-doc="clientZip" /></label>
-            <label>Ort<input type="text" data-doc="clientCity" /></label>
-          </div>
-
-          <h2>Text</h2>
-          <label>Einleitung<textarea rows="3" data-doc="introText"></textarea></label>
-          <label>Schlusstext<textarea rows="2" data-doc="closingText"></textarea></label>
-
-          <h2>Positionen</h2>
-          <table class="items-editor">
-            <thead>
-              <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Ansatz</th><th></th></tr>
-            </thead>
-            <tbody id="items-body"></tbody>
-          </table>
-          <button type="button" id="add-item">+ Position</button>
-
-          <div class="field-row vat-row">
-            <label class="checkbox">
-              <input type="checkbox" data-doc="vatEnabled" /> MWST ausweisen
-            </label>
-            <label>Satz %<input type="number" step="0.1" min="0" data-doc="vatRate" /></label>
-            <label>Währung
-              <select data-doc="currency">
-                <option value="CHF">CHF</option>
-                <option value="EUR">EUR</option>
-              </select>
-            </label>
-          </div>
-
-          <details class="settings">
-            <summary>Absender & IBAN</summary>
-            <label>Name<input type="text" data-setting="name" /></label>
-            <label>Strasse / Nr.<input type="text" data-setting="address" /></label>
-            <div class="field-row zip-city">
-              <label>PLZ<input type="text" data-setting="zip" /></label>
-              <label>Ort<input type="text" data-setting="city" /></label>
+        <div class="editor-inner">
+          <header class="editor-header">
+            <h1>BILLS</h1>
+            <div class="document-bar">
+              <select id="document-select" title="Dokument wählen"></select>
+              <button type="button" id="new-document" title="Neues Dokument">+</button>
+              <button type="button" id="delete-document" title="Dokument löschen">🗑</button>
             </div>
-            <label>IBAN<input type="text" data-setting="iban" /></label>
-            <label>E-Mail<input type="text" data-setting="email" /></label>
-            <label>Telefon<input type="text" data-setting="phone" /></label>
-            <label>MWST-Nr.<input type="text" data-setting="vatNumber" /></label>
-          </details>
-        </section>
+            <div class="document-bar">
+              <button type="button" id="export-yaml">YAML exportieren</button>
+              <button type="button" id="import-yaml">YAML importieren</button>
+              <input type="file" id="import-yaml-input" accept=".yaml,.yml" hidden />
+            </div>
+          </header>
+
+          <section class="fields">
+            <div class="field-row">
+              <label>Nr.<input type="text" data-doc="number" /></label>
+              <label>Datum<input type="date" data-doc="date" /></label>
+            </div>
+            <div class="field-row">
+              <label>Gültig bis (Offerte)<input type="date" data-doc="validUntil" /></label>
+              <label>Zahlbar bis (Rechnung)<input type="date" data-doc="dueDate" /></label>
+            </div>
+
+            <h2>Kunde</h2>
+            <label>Name<input type="text" data-doc="clientName" /></label>
+            <label>Strasse / Nr.<input type="text" data-doc="clientAddress" /></label>
+            <div class="field-row zip-city">
+              <label>PLZ<input type="text" data-doc="clientZip" /></label>
+              <label>Ort<input type="text" data-doc="clientCity" /></label>
+            </div>
+
+            <h2>Text</h2>
+            <label>Einleitung<textarea rows="3" data-doc="introText"></textarea></label>
+            <label>Schlusstext<textarea rows="2" data-doc="closingText"></textarea></label>
+
+            <h2>Positionen</h2>
+            <table class="items-editor">
+              <thead>
+                <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Ansatz</th><th></th></tr>
+              </thead>
+              <tbody id="items-body"></tbody>
+            </table>
+            <button type="button" id="add-item">+ Position</button>
+
+            <div class="field-row vat-row">
+              <label class="checkbox">
+                <input type="checkbox" data-doc="vatEnabled" /> MWST ausweisen
+              </label>
+              <label>Satz %<input type="number" step="0.1" min="0" data-doc="vatRate" /></label>
+              <label>Währung
+                <select data-doc="currency">
+                  <option value="CHF">CHF</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </label>
+            </div>
+
+            <details class="settings">
+              <summary>Absender & IBAN</summary>
+              <label>Name<input type="text" data-setting="name" /></label>
+              <label>Strasse / Nr.<input type="text" data-setting="address" /></label>
+              <div class="field-row zip-city">
+                <label>PLZ<input type="text" data-setting="zip" /></label>
+                <label>Ort<input type="text" data-setting="city" /></label>
+              </div>
+              <label>IBAN<input type="text" data-setting="iban" /></label>
+              <label>E-Mail<input type="text" data-setting="email" /></label>
+              <label>Telefon<input type="text" data-setting="phone" /></label>
+              <label>MWST-Nr.<input type="text" data-setting="vatNumber" /></label>
+            </details>
+          </section>
+        </div>
       </aside>
 
       <main class="preview">

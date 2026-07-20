@@ -49,10 +49,15 @@ body {
 .editor {
   width: 400px;
   flex-shrink: 0;
-  background: var(--paper);
-  border-right: 2px solid var(--line);
+  background: var(--surface);
   overflow-y: auto;
   scrollbar-gutter: stable;
+}
+
+.editor-inner {
+  min-height: 100%;
+  background: var(--paper);
+  border-right: 2px solid var(--line);
   padding: 16px;
 }
 
