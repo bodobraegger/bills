@@ -35,3 +35,18 @@ export function escapeHtml(text: string): string {
 export function multilineHtml(text: string): string {
   return escapeHtml(text).replaceAll("\n", "<br>");
 }
+
+// Splits on a literal <pb> (or <pb/>) marker so authors can force a manual
+// page break inside intro/outro text; each segment becomes its own
+// paragraph, with every paragraph after the first flagged to start a fresh
+// page (both for print's native break-before and the screen pagination).
+export function renderTextBlocks(text: string, className: string): string {
+  if (!text) return "";
+  return text
+    .split(/<pb\s*\/?>/i)
+    .map((segment, index) => {
+      const breakClass = index > 0 ? " page-break-before" : "";
+      return `<p class="${className}${breakClass}">${multilineHtml(segment)}</p>`;
+    })
+    .join("");
+}

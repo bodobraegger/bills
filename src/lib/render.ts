@@ -9,6 +9,7 @@ import {
   formatMoney,
   formatQuantity,
   multilineHtml,
+  renderTextBlocks,
 } from "./format";
 
 export function renderSheet(
@@ -101,7 +102,7 @@ export function renderSheet(
         ${clientLines}
       </div>
 
-      ${doc.introText ? `<p class="doc-text">${multilineHtml(doc.introText)}</p>` : ""}
+      ${renderTextBlocks(doc.introText, "doc-text")}
 
       <div class="order-title">${label} ${escapeHtml(doc.number)}</div>
 
@@ -121,7 +122,7 @@ export function renderSheet(
         </tbody>
       </table>
 
-      ${doc.outroText ? `<p class="doc-text">${multilineHtml(doc.outroText)}</p>` : ""}
+      ${renderTextBlocks(doc.outroText, "doc-text")}
 
       ${paymentLines ? `<table class="payment"><tbody>${paymentLines}</tbody></table>` : ""}
       ${mode === "rechnung" ? `<p class="qr-note">Der QR-Zahlteil befindet sich auf Seite 2.</p>` : ""}

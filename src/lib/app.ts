@@ -65,20 +65,24 @@ function renderPreview(): void {
   }
 }
 
-const PAGE_BOTTOM_MARGIN_MM = 8;
+// Must match document.css: .doc-body's own padding, and .doc-page-slot's.
+const PAGE_MARGIN_TOP_MM = 19;
+const PAGE_MARGIN_BOTTOM_MM = 10;
 
 // The browser's native print pagination already splits an overflowing
-// .doc-body across multiple physical pages correctly, but on screen it just
-// renders as one tall box. This clips it into page-height "windows" onto the
-// same flowed content (via negative margin-top per slot) purely for visual
-// preview; @media print resets the clipping so print still uses the single
-// natural flow it already handles correctly.
+// .doc-body across multiple physical pages correctly (with real top/bottom
+// margins on every page, via box-decoration-break:clone in document.css),
+// but on screen it just renders as one tall box. This mirrors that: clip
+// .doc-body's pure content (no padding baked in) into one .doc-page-slot per
+// A4 page, each supplying its own fresh top/bottom padding, clipping a
+// (PAGE_HEIGHT_MM - PAGE_MARGIN_TOP_MM - PAGE_MARGIN_BOTTOM_MM)-tall window
+// via a shifted .doc-page-inner. @media print resets the clipping so print
+// keeps using the single flow it already fragments correctly on its own.
 //
 // Break points land between .doc-body's top-level children (never inside
-// one, so a paragraph or table is never cut mid-content) and each non-final
-// page only fills up to PAGE_HEIGHT_MM - PAGE_BOTTOM_MARGIN_MM, leaving a
-// blank buffer before the next page starts instead of running flush to
-// the edge.
+// one, so a paragraph or table is never cut mid-content) unless a child
+// carries the page-break-before marker (from a manual <pb> in the source
+// text — see renderTextBlocks in format.ts), which always forces a break.
 function paginateDocBody(): void {
   const docBody = sheet.querySelector<HTMLElement>(".doc-body");
   if (!docBody) return;
@@ -88,16 +92,29 @@ function paginateDocBody(): void {
   const totalHeight = docBody.getBoundingClientRect().height;
   if (totalHeight <= fullPageHeightPx) return;
 
-  const pageBudgetPx = (PAGE_HEIGHT_MM - PAGE_BOTTOM_MARGIN_MM) * MM_TO_PX;
-  const childBottoms = [...docBody.children].map(
-    (child) => child.getBoundingClientRect().bottom - docBodyTop,
+  const paddingTopPx = PAGE_MARGIN_TOP_MM * MM_TO_PX;
+  const pageContentBudgetPx =
+    (PAGE_HEIGHT_MM - PAGE_MARGIN_TOP_MM - PAGE_MARGIN_BOTTOM_MM) * MM_TO_PX;
+
+  const children = [...docBody.children] as HTMLElement[];
+  // .doc-body's own top padding is baked into these measurements (children
+  // are pushed down by it); strip it out so offsets are relative to the
+  // pure content flow, since each slot supplies its own fresh padding
+  // instead of relying on it appearing once at the top of the whole thing.
+  const childBottoms = children.map(
+    (child) => child.getBoundingClientRect().bottom - docBodyTop - paddingTopPx,
   );
 
   const pageStartOffsets = [0];
   let currentPageStart = 0;
   let lastChildBottom = 0;
-  for (const bottom of childBottoms) {
-    if (bottom - currentPageStart > pageBudgetPx && lastChildBottom > currentPageStart) {
+  for (let i = 0; i < children.length; i++) {
+    const bottom = childBottoms[i]!;
+    const forceBreak = children[i]!.classList.contains("page-break-before");
+    if (
+      lastChildBottom > currentPageStart &&
+      (forceBreak || bottom - currentPageStart > pageContentBudgetPx)
+    ) {
       currentPageStart = lastChildBottom;
       pageStartOffsets.push(currentPageStart);
     }
@@ -105,8 +122,8 @@ function paginateDocBody(): void {
     // whole page's budget even starting fresh on its own page; fall back to
     // forced breaks within it rather than letting it silently overflow past
     // the slot's overflow:hidden clip.
-    while (bottom - currentPageStart > pageBudgetPx) {
-      currentPageStart += pageBudgetPx;
+    while (bottom - currentPageStart > pageContentBudgetPx) {
+      currentPageStart += pageContentBudgetPx;
       pageStartOffsets.push(currentPageStart);
     }
     lastChildBottom = bottom;

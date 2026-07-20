@@ -20,41 +20,49 @@
 }
 
 .doc-body,
-.qr-page {
+.qr-page,
+.doc-page-slot {
   width: 210mm;
   min-height: 297mm;
 }
 
 @media print {
   .doc-body,
-  .qr-page {
+  .qr-page,
+  .doc-page-slot {
     min-height: 296mm;
   }
 }
 
+/* box-decoration-break:clone makes the browser repeat this padding on every
+   physical page a fragmented box spans, instead of only once at the very
+   start/end of the flow (the CSS fragmentation default, "slice") — this is
+   what gives every printed page real top/bottom margins, not just the
+   first/last. Both app.ts's PAGE_MARGIN_TOP_MM/PAGE_MARGIN_BOTTOM_MM and
+   .doc-page-slot's padding below must match these values. */
 .doc-body {
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Screen-only pagination: paginateDocBody() in app.ts clones .doc-body's
-   content into one .doc-page-slot per A4 page, each clipping a different
-   297mm-tall window via a shifted .doc-page-inner. Padding lives on the
-   shifted inner copy (not the clipping slot), so it only ever appears once,
-   at the true top of the flow, matching how print's own box fragmentation
-   doesn't repeat padding per physical page. */
+   pure content (no padding baked in) into one .doc-page-slot per A4 page.
+   Each slot supplies its own fresh 19mm/19mm/10mm padding (box-sizing:
+   border-box keeps the slot exactly 297mm tall including it) and clips a
+   268mm-tall content window via a shifted .doc-page-inner, mirroring what
+   box-decoration-break:clone does for print. */
 .doc-page-slot {
-  width: 210mm;
   height: 297mm;
-  overflow: hidden;
-}
-
-.doc-page-inner {
-  width: 210mm;
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 @media print {
@@ -97,6 +105,14 @@ table.invoice-data td:last-child {
 
 .doc-text {
   margin: 22pt 0 0;
+}
+
+/* Manual <pb> marker in intro/outro text (see renderTextBlocks in
+   format.ts): forces the paragraph after the marker to start a fresh page,
+   both for print and paginateDocBody()'s screen-preview equivalent. */
+.page-break-before {
+  break-before: page;
+  page-break-before: always;
 }
 
 .order-title {
