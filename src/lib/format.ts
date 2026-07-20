@@ -38,15 +38,23 @@ export function multilineHtml(text: string): string {
 
 // Splits on a literal <pb> (or <pb/>) marker so authors can force a manual
 // page break inside intro/outro text; each segment becomes its own
-// paragraph, with every paragraph after the first flagged to start a fresh
+// paragraph, with the paragraph after each marker flagged to start a fresh
 // page (both for print's native break-before and the screen pagination).
+// Empty segments (a leading <pb> to push the whole block to a new page, a
+// trailing one, or accidental doubles) are dropped rather than rendered as
+// blank paragraphs, but still carry their break forward to the next segment
+// that actually has content.
 export function renderTextBlocks(text: string, className: string): string {
   if (!text) return "";
-  return text
-    .split(/<pb\s*\/?>/i)
-    .map((segment, index) => {
-      const breakClass = index > 0 ? " page-break-before" : "";
-      return `<p class="${className}${breakClass}">${multilineHtml(segment)}</p>`;
-    })
-    .join("");
+  const segments = text.split(/<pb\s*\/?>/i);
+  const paragraphs: string[] = [];
+  let pendingBreak = false;
+  segments.forEach((segment, index) => {
+    if (index > 0) pendingBreak = true;
+    if (segment.trim() === "") return;
+    const breakClass = pendingBreak ? " page-break-before" : "";
+    paragraphs.push(`<p class="${className}${breakClass}">${multilineHtml(segment)}</p>`);
+    pendingBreak = false;
+  });
+  return paragraphs.join("");
 }
