@@ -7,7 +7,7 @@ vat:
   rate: 8.1
 sender:
   name: Bodo Brägger
-  address: Musterstrasse 1
+  address: Musterweg 2
   zip: "8000"
   city: Zürich
   country: CH
@@ -15,7 +15,7 @@ sender:
   email: bodo@bbo.do
 client:
   name: Beispiel AG
-  address: Musterweg 12
+  address: Musterwstrasse 12
   zip: "3000"
   city: Bern
 intro: |
