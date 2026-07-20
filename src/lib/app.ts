@@ -69,22 +69,17 @@ function renderPreview(): void {
 const PAGE_MARGIN_TOP_MM = 19;
 const PAGE_MARGIN_BOTTOM_MM = 10;
 
-// Print only gets .doc-body's padding once, at the very start/end of the
-// whole flow (plain CSS fragmentation "slice" behavior — see document.css
-// for why repeating it on every physical page didn't pan out). This mirrors
-// that same model for the screen preview: clip .doc-body's pure content (no
-// padding baked in) into one .doc-page-slot per A4 page via a shifted
-// .doc-page-inner. Only the first page's budget loses the top padding;
-// every page's budget conservatively reserves the bottom padding too, since
-// which page ends up last isn't known in advance and it's better to break
-// a little early than show content print will place on a following page.
-//
-// Each slot's .doc-page-inner gets an explicit JS-computed height (not a
-// fixed CSS one) — a break can land earlier than a page's full capacity
-// (e.g. a whole paragraph pushed over to avoid splitting it, or a manual
-// <pb>), and a fixed-height clip window would then still show up to its
-// full capacity regardless, duplicating that content at the top of the
-// next slot too.
+// Modeled on vue-smart-pages (github.com/Renovamen/oh-my-cv's pagination
+// package): rather than cloning content into separate cropped page boxes
+// (which this app tried first — every version had some way for the same
+// content to end up visible twice, since the clip window and the JS break
+// math were two different sources of truth that could disagree), insert a
+// spacer element directly into the *same*, single, never-duplicated content
+// flow at each break point. On screen the spacer's margin-top pushes
+// whatever follows down by roughly a page height, just for a visual
+// division; @media print ignores that margin entirely and instead gives the
+// spacer break-before:page, print's own reliable native mechanism — so
+// print's correctness never depends on the JS height math being precise.
 //
 // Break points land between .doc-body's top-level children (never inside
 // one, so a paragraph or table is never cut mid-content) unless a child
@@ -95,78 +90,36 @@ function paginateDocBody(): void {
   if (!docBody) return;
 
   const fullPageHeightPx = PAGE_HEIGHT_MM * MM_TO_PX;
-  const docBodyTop = docBody.getBoundingClientRect().top;
   const totalHeight = docBody.getBoundingClientRect().height;
   if (totalHeight <= fullPageHeightPx) return;
 
   const paddingTopPx = PAGE_MARGIN_TOP_MM * MM_TO_PX;
   const paddingBottomPx = PAGE_MARGIN_BOTTOM_MM * MM_TO_PX;
-  const budgetForPage = (pageIndex: number) =>
-    fullPageHeightPx - paddingBottomPx - (pageIndex === 0 ? paddingTopPx : 0);
+  const contentBudgetPx = fullPageHeightPx - paddingTopPx - paddingBottomPx;
 
-  const children = [...docBody.children] as HTMLElement[];
-  // .doc-body's own top padding is baked into these measurements (children
-  // are pushed down by it); strip it out so offsets are relative to the
-  // pure content flow, since each slot supplies its own fresh padding
-  // instead of relying on it appearing once at the top of the whole thing.
-  const childTops = children.map(
-    (child) => child.getBoundingClientRect().top - docBodyTop - paddingTopPx,
-  );
-  const childBottoms = children.map(
-    (child) => child.getBoundingClientRect().bottom - docBodyTop - paddingTopPx,
-  );
+  let pageHeightSoFar = 0;
+  for (const child of [...docBody.children]) {
+    if (child instanceof HTMLElement && child.classList.contains("doc-page-break")) {
+      continue;
+    }
+    const style = getComputedStyle(child);
+    const childHeight =
+      child.getBoundingClientRect().height +
+      (Number.parseFloat(style.marginTop) || 0) +
+      (Number.parseFloat(style.marginBottom) || 0);
+    const forceBreak =
+      child instanceof HTMLElement && child.classList.contains("page-break-before");
 
-  const pageStartOffsets = [0];
-  let currentPageStart = 0;
-  let lastChildBottom = 0;
-  for (let i = 0; i < children.length; i++) {
-    const top = childTops[i]!;
-    const bottom = childBottoms[i]!;
-    const forceBreak = children[i]!.classList.contains("page-break-before");
-    let budget = budgetForPage(pageStartOffsets.length - 1);
-    if (
-      lastChildBottom > currentPageStart &&
-      (forceBreak || bottom - currentPageStart > budget)
-    ) {
-      currentPageStart = lastChildBottom;
-      pageStartOffsets.push(currentPageStart);
-      budget = budgetForPage(pageStartOffsets.length - 1);
+    if (pageHeightSoFar > 0 && (forceBreak || pageHeightSoFar + childHeight > contentBudgetPx)) {
+      const spacer = document.createElement("div");
+      spacer.className = "doc-page-break";
+      spacer.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
+      spacer.style.paddingBottom = `${paddingBottomPx}px`;
+      docBody.insertBefore(spacer, child);
+      pageHeightSoFar = 0;
     }
-    // A single child (e.g. one long paragraph) can still be taller than a
-    // whole page's budget even starting fresh on its own page; fall back to
-    // forced breaks within it, snapped down to the child's own line-height
-    // so the cut always lands cleanly between lines instead of revealing a
-    // sliver of the next line before the page actually breaks.
-    while (bottom - currentPageStart > budget) {
-      const lineHeightPx =
-        Number.parseFloat(getComputedStyle(children[i]!).lineHeight) || budget;
-      const rawBreak = currentPageStart + budget;
-      const linesIntoChild = Math.floor((rawBreak - top) / lineHeightPx);
-      const snapped = top + linesIntoChild * lineHeightPx;
-      currentPageStart = snapped > currentPageStart ? snapped : rawBreak;
-      pageStartOffsets.push(currentPageStart);
-      budget = budgetForPage(pageStartOffsets.length - 1);
-    }
-    lastChildBottom = bottom;
+    pageHeightSoFar += childHeight;
   }
-  if (pageStartOffsets.length <= 1) return;
-
-  const pureContentEnd = childBottoms[childBottoms.length - 1]!;
-  const innerHtml = docBody.innerHTML;
-  const fragment = document.createDocumentFragment();
-  pageStartOffsets.forEach((startOffsetPx, index) => {
-    const endOffsetPx = pageStartOffsets[index + 1] ?? pureContentEnd;
-    const slot = document.createElement("div");
-    slot.className = "doc-page-slot";
-    const inner = document.createElement("div");
-    inner.className = "doc-page-inner";
-    inner.style.marginTop = `${-startOffsetPx}px`;
-    inner.style.height = `${endOffsetPx - startOffsetPx}px`;
-    inner.innerHTML = innerHtml;
-    slot.append(inner);
-    fragment.append(slot);
-  });
-  docBody.replaceWith(fragment);
 }
 
 function bindSettingsInputs(): void {

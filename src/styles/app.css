@@ -186,11 +186,11 @@ input[data-doc="number"] {
 }
 
 .checkbox input {
-  width: 14px;
-  height: 14px;
+  width: 10px;
   margin: 0;
   padding: 0;
   flex-shrink: 0;
+  border-radius: 0 !important;
 }
 
 .vat-row {
@@ -339,8 +339,7 @@ button.primary:hover {
 }
 
 .doc-body,
-.qr-page,
-.doc-page-slot {
+.qr-page {
   background: var(--paper);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
@@ -372,8 +371,7 @@ button.primary:hover {
   }
 
   .doc-body,
-  .qr-page,
-  .doc-page-slot {
+  .qr-page {
     box-shadow: none;
   }
 }

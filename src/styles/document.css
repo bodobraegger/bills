@@ -20,16 +20,14 @@
 }
 
 .doc-body,
-.qr-page,
-.doc-page-slot {
+.qr-page {
   width: 210mm;
   min-height: 297mm;
 }
 
 @media print {
   .doc-body,
-  .qr-page,
-  .doc-page-slot {
+  .qr-page {
     min-height: 296mm;
   }
 }
@@ -40,40 +38,24 @@
   padding: 19mm 19mm 10mm;
 }
 
-/* Screen-only pagination: paginateDocBody() in app.ts clones .doc-body's
-   pure content (no padding baked in) into one .doc-page-slot per A4 page.
-   The slot keeps min-height:297mm so it still looks like a full page even
-   when its content is short, but the actual content window comes from
-   .doc-page-inner's JS-computed inline height (plus overflow:hidden here) —
-   a CSS-only fixed clip height would be wrong whenever a break lands
-   earlier than that fixed capacity (e.g. a whole paragraph pushed to the
-   next page to avoid splitting it), showing the same content doubled at
-   the bottom of one slot and the top of the next.
-   Print itself only gets .doc-body's padding once at the very start/end of
-   the flow (plain CSS fragmentation "slice" behavior); reliably repeating
-   it on every physical page in Chromium turned out to need either
-   box-decoration-break or named @page margins, and neither actually
-   worked in testing, so print keeps the simpler, guaranteed-correct (if
-   less pretty on interior pages) default. */
-.doc-page-slot {
-  display: flex;
-  flex-direction: column;
-  padding: 19mm 19mm 10mm;
-  box-sizing: border-box;
-}
-
-.doc-page-inner {
-  overflow: hidden;
+/* Screen-only pagination: paginateDocBody() in app.ts inserts one of these
+   directly into .doc-body's own content flow at each break point (content
+   is never cloned or cropped, so it can't end up shown twice). On screen
+   its JS-computed margin-top roughly pushes what follows down to the next
+   page, with the border as a visual divider; print ignores that margin and
+   uses its own reliable break-before:page instead, so print's correctness
+   never depends on the JS height math being exactly right. */
+.doc-page-break {
+  border-top: 0.5mm solid #000;
 }
 
 @media print {
-  .doc-page-slot:not(:first-of-type) {
-    display: none;
-  }
-
-  .doc-page-inner {
+  .doc-page-break {
+    break-before: page;
+    page-break-before: always;
     margin-top: 0 !important;
-    height: auto !important;
+    padding-bottom: 0 !important;
+    border: none;
   }
 }
 
