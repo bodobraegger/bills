@@ -71,6 +71,7 @@ body {
 
 .document-bar {
   display: flex;
+  align-items: center;
   gap: 6px;
   margin-bottom: 16px;
 }
@@ -78,6 +79,20 @@ body {
 .document-bar select {
   flex: 1;
   min-width: 0;
+  height: 30px;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+#new-document,
+#delete-document {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fields h2 {
