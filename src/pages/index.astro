@@ -18,7 +18,13 @@ import "../styles/document.css";
       <aside class="editor">
         <div class="editor-inner">
           <header class="editor-header">
-            <h1>BILLS</h1>
+            <div class="editor-title">
+              <h1>BILLS</h1>
+              <a class="home-link" href="https://bbo.do" target="_blank" rel="noopener">
+                <span class="home-link-star">★</span>
+                <span>bbo.do</span>
+              </a>
+            </div>
             <div class="document-bar">
               <select id="document-select" title="Dokument wählen"></select>
               <button type="button" id="new-document" title="Neues Dokument">+</button>
@@ -55,12 +61,14 @@ import "../styles/document.css";
             <label>Schlusstext<textarea rows="2" data-doc="goodbyeText"></textarea></label>
 
             <h2>Positionen</h2>
-            <table class="items-editor">
-              <thead>
-                <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Ansatz</th><th></th></tr>
-              </thead>
-              <tbody id="items-body"></tbody>
-            </table>
+            <div class="items-editor-scroll">
+              <table class="items-editor">
+                <thead>
+                  <tr><th>Beschreibung</th><th>Menge</th><th>Einheit</th><th>Ansatz</th><th></th></tr>
+                </thead>
+                <tbody id="items-body"></tbody>
+              </table>
+            </div>
             <button type="button" id="add-item">+ Position</button>
 
             <div class="field-row vat-row">

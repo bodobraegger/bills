@@ -76,12 +76,20 @@ body {
 }
 
 .editor-header {
-  h1 {
-    margin: 0 0 12px;
-    font-size: 20px;
-    letter-spacing: 0.3em;
+  .editor-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 12px;
     border-bottom: 3px double var(--line);
     padding-bottom: 8px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 0.3em;
   }
 }
 
@@ -220,6 +228,10 @@ body {
   }
 }
 
+.items-editor-scroll {
+  overflow-x: auto;
+}
+
 .items-editor {
   width: 100%;
   border-collapse: collapse;
@@ -311,6 +323,30 @@ button {
   }
 }
 
+.home-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--ink);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  @media print {
+    display: none;
+  }
+}
+
+.home-link-star {
+  font-size: 14px;
+}
+
 .preview {
   flex: 1;
   display: flex;
@@ -377,5 +413,59 @@ button {
     width: auto;
     margin: 0;
     box-shadow: none;
+  }
+}
+
+/* `.sheet` is a fixed 210mm (~794px) print page; whenever the space actually
+   available for it (viewport minus whatever sits beside/around it) is
+   narrower than that, zoom out just enough to fit, on both sides of the
+   stacking breakpoint below. `zoom` (unlike `transform: scale`) shrinks the
+   layout box along with the visual size, so the rest of the page doesn't
+   reserve leftover whitespace for the unscaled size. `min(100%, …)` keeps it
+   at true size whenever there's room to spare, so this never zooms in past
+   100%. */
+@media screen and (min-width: 701px) {
+  /* Side by side with the 400px editor (see .editor below) plus
+     .sheet-scroll's 24px each side of padding. */
+  .sheet {
+    zoom: min(100%, calc((100vw - 448px) / 793.7px * 100%));
+  }
+}
+
+/* Below this width the editor and the (fixed 210mm) preview no longer fit
+   side by side, so they stack instead: the sidebar becomes a normal-height
+   block above the preview and the whole page scrolls, rather than each
+   column scrolling independently in a fixed-height row. print is exempted
+   (already forced to `display: block` above) since it's not a priority on
+   mobile and always renders at full A4 size regardless of viewport. */
+@media screen and (max-width: 700px) {
+  .app {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .editor {
+    width: 100%;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .editor-inner {
+    border-right: none;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .sheet-scroll {
+    padding: 12px;
+  }
+
+  /* Stacked: no editor width to subtract, just .sheet-scroll's (now 12px
+     each side) padding. */
+  .sheet {
+    zoom: min(100%, calc((100vw - 24px) / 793.7px * 100%));
   }
 }
