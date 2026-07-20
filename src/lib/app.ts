@@ -159,6 +159,16 @@ function paginateDocBody(): void {
       forceBreak && childrenOnCurrentPage === 1 && !previousBreakWasForced;
     const effectiveForceBreak: boolean = forceBreak && !redundantForce;
 
+    // A suppressed <pb> still carries the page-break-before class, which
+    // print's CSS acts on unconditionally — screen never notices (this class
+    // has no visual effect there), but left in place it forces its own
+    // real page break regardless of what we just decided, stranding
+    // whatever came right before it (typically the repeated header) alone
+    // on a page in print only.
+    if (redundantForce && child instanceof HTMLElement) {
+      child.classList.remove("page-break-before");
+    }
+
     if (pageHeightSoFar > 0 && (effectiveForceBreak || overflow)) {
       const note = continuedNote.cloneNode(true) as HTMLElement;
       docBody.insertBefore(note, child);
