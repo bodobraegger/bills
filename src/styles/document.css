@@ -11,17 +11,6 @@
   margin: 0;
 }
 
-/* Named page for .doc-body's print flow: gives every physical page it
-   fragments across the same real top/bottom/side margins (unlike the
-   default unnamed @page above, kept at margin:0 for .qr-page, which the
-   QR-bill standard requires flush at the physical page edges). This is
-   ordinary CSS Paged Media, unlike box-decoration-break (which doesn't
-   reliably repeat padding across genuine page fragments in Chromium, only
-   spans/columns) — must match app.ts's PAGE_MARGIN_TOP_MM/BOTTOM_MM. */
-@page doc {
-  margin: 19mm 19mm 10mm;
-}
-
 .sheet {
   --rule: 0.5pt solid #000;
   font-family: "New Computer Modern Mono", "Courier New", monospace;
@@ -38,7 +27,9 @@
 }
 
 @media print {
-  .qr-page {
+  .doc-body,
+  .qr-page,
+  .doc-page-slot {
     min-height: 296mm;
   }
 }
@@ -49,53 +40,40 @@
   padding: 19mm 19mm 10mm;
 }
 
-@media print {
-  /* @page doc now supplies the margin on every physical page; the element's
-     own padding/width would double up on top of that, 210mm is wider than
-     the content area @page doc leaves after its side margins, and a
-     297mm min-height would force every physical page's content area
-     (only 297-19-10=268mm after @page doc's margins) to overflow into an
-     extra page even for a short, single-page document. */
-  .doc-body,
-  .doc-page-inner {
-    page: doc;
-    width: auto;
-    min-height: 0;
-    padding: 0;
-  }
-}
-
 /* Screen-only pagination: paginateDocBody() in app.ts clones .doc-body's
    pure content (no padding baked in) into one .doc-page-slot per A4 page.
-   Each slot supplies its own fresh 19mm/19mm/10mm padding (box-sizing:
-   border-box keeps the slot exactly 297mm tall including it) and clips a
-   268mm-tall content window via a shifted .doc-page-inner, mirroring what
-   @page doc gives print for free. */
+   The slot keeps min-height:297mm so it still looks like a full page even
+   when its content is short, but the actual content window comes from
+   .doc-page-inner's JS-computed inline height (plus overflow:hidden here) —
+   a CSS-only fixed clip height would be wrong whenever a break lands
+   earlier than that fixed capacity (e.g. a whole paragraph pushed to the
+   next page to avoid splitting it), showing the same content doubled at
+   the bottom of one slot and the top of the next.
+   Print itself only gets .doc-body's padding once at the very start/end of
+   the flow (plain CSS fragmentation "slice" behavior); reliably repeating
+   it on every physical page in Chromium turned out to need either
+   box-decoration-break or named @page margins, and neither actually
+   worked in testing, so print keeps the simpler, guaranteed-correct (if
+   less pretty on interior pages) default. */
 .doc-page-slot {
-  height: 297mm;
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
   box-sizing: border-box;
+}
+
+.doc-page-inner {
   overflow: hidden;
 }
 
 @media print {
-  /* display:contents drops the slot's own box (padding, width, sizing —
-     all of it) so only .doc-page-inner's page:doc box model applies; only
-     the first slot is shown since print re-fragments the full, unclipped
-     content on its own via @page doc, same as the un-paginated .doc-body
-     case does. */
-  .doc-page-slot {
-    display: contents;
-  }
-
   .doc-page-slot:not(:first-of-type) {
     display: none;
   }
 
   .doc-page-inner {
     margin-top: 0 !important;
+    height: auto !important;
   }
 }
 
