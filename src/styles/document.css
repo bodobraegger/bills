@@ -233,8 +233,11 @@ table.payment {
 .qr-page {
   break-before: page;
   page-break-before: always;
-  display: flex;
-  flex-direction: column;
+  /* Not flex: Chromium mishandles break-before:page + break-inside:avoid
+     together inside a flex container (see .doc-body), so .qr-part below is
+     pinned to the bottom via position:absolute instead of the usual
+     flex + margin-top:auto trick. */
+  position: relative;
 
   /* .header-grid normally relies on .doc-body's own padding for its 19mm
      inset; .qr-page has none (the QR-bill SVG below needs to stay flush to
@@ -251,8 +254,10 @@ table.payment {
 }
 
 .qr-part {
+  position: absolute;
+  left: 0;
+  bottom: 0;
   width: 210mm;
-  margin-top: auto;
   break-inside: avoid;
 
   svg {
