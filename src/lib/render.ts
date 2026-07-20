@@ -121,12 +121,14 @@ export function renderSheet(
         </tbody>
       </table>
 
+      ${doc.outroText ? `<p class="doc-text">${multilineHtml(doc.outroText)}</p>` : ""}
+
       ${paymentLines ? `<table class="payment"><tbody>${paymentLines}</tbody></table>` : ""}
       ${mode === "rechnung" ? `<p class="qr-note">Der QR-Zahlteil befindet sich auf Seite 2.</p>` : ""}
 
       <div class="closing">
         <div>***</div>
-        ${doc.closingText ? `<div>${multilineHtml(doc.closingText)}</div>` : ""}
+        ${doc.goodbyeText ? `<div>${multilineHtml(doc.goodbyeText)}</div>` : ""}
         <div>${escapeHtml(settings.name)}</div>
       </div>
     </div>

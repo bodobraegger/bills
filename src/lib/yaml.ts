@@ -39,6 +39,7 @@ interface YamlDocument {
   intro?: string;
   items: YamlItem[];
   outro?: string;
+  goodbye?: string;
 }
 
 export interface YamlImportResult {
@@ -106,7 +107,8 @@ export function documentToYaml(doc: BillDocument, settings: Settings): string {
     },
     intro: doc.introText || undefined,
     items: doc.items.map(itemToYaml),
-    outro: doc.closingText || undefined,
+    outro: doc.outroText || undefined,
+    goodbye: doc.goodbyeText || undefined,
   };
   return dump(yamlDoc, { lineWidth: 100 });
 }
@@ -132,7 +134,8 @@ export function documentFromYaml(text: string): YamlImportResult {
     clientZip: toYamlString(yamlDoc.client?.zip),
     clientCity: toYamlString(yamlDoc.client?.city),
     introText: toYamlString(yamlDoc.intro),
-    closingText: toYamlString(yamlDoc.outro),
+    outroText: toYamlString(yamlDoc.outro),
+    goodbyeText: toYamlString(yamlDoc.goodbye),
     items: items.length > 0 ? items : [emptyItem()],
     vatEnabled: yamlDoc.vat?.enabled ?? false,
     vatRate: toOptionalNumber(yamlDoc.vat?.rate) ?? 8.1,

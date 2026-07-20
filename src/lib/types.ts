@@ -19,7 +19,8 @@ export interface BillDocument {
   clientZip: string;
   clientCity: string;
   introText: string;
-  closingText: string;
+  outroText: string;
+  goodbyeText: string;
   items: LineItem[];
   vatEnabled: boolean;
   vatRate: number;
@@ -75,7 +76,8 @@ export function createDocument(number: string): BillDocument {
     clientZip: "",
     clientCity: "",
     introText: "",
-    closingText: "Besten Dank für Ihr Vertrauen.",
+    outroText: "",
+    goodbyeText: "Besten Dank für Ihr Vertrauen.",
     items: [emptyItem()],
     vatEnabled: false,
     vatRate: 8.1,
