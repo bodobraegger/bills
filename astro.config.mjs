@@ -1,15 +1,12 @@
 import { defineConfig } from "astro/config";
 
-// The top-level config isn't invoked per-command in Astro 7 (only nested
-// options like `server` support that callback form), so branch on the
-// standard Vite/Astro-set NODE_ENV instead: "development" for `astro dev`,
-// "production" for `astro build`/`preview`. Dev serves at root for a normal
-// localhost experience; the built site needs "/bills" to match the
-// GitHub Pages project path.
-const isDev = process.env.NODE_ENV !== "production";
-
+// BASE_PATH comes from the deploy workflow (deploy.yml), itself read from
+// actions/configure-pages' own base_path output rather than hardcoded here,
+// so this stays correct if the repo is ever renamed or moved to a different
+// GitHub Pages path. Local `astro dev`/`preview` don't set it, so they fall
+// back to serving at root.
 export default defineConfig({
   site: "https://bodobraegger.github.io",
-  base: isDev ? "/" : "/bills",
+  base: process.env.BASE_PATH || "/",
   devToolbar: { enabled: false },
 });
