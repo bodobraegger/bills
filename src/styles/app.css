@@ -1,6 +1,27 @@
+@font-face {
+  font-family: "BradfordMonoLL";
+  font-style: normal;
+  font-weight: 400;
+  src: url("../assets/fonts/BradfordMonoLL-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+/* Width-matched fallback so the UI doesn't reflow once BradfordMonoLL loads.
+   Metrics ported from bbo.do's src/styles/fonts.css. */
+@font-face {
+  font-family: "BradfordMonoLLFallback";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Courier New"), local("CourierNewPSMT"), local("Liberation Mono"), local("Cousine");
+  size-adjust: 96.65%;
+  ascent-override: 77%;
+  descent-override: 23%;
+  line-gap-override: 20%;
+}
+
 :root {
-  --mono: "Berkeley Mono", "IBM Plex Mono", "JetBrains Mono", "Menlo",
-    "DejaVu Sans Mono", monospace;
+  --mono: "BradfordMonoLL", "BradfordMonoLLFallback", "Berkeley Mono",
+    "IBM Plex Mono", "JetBrains Mono", "Menlo", "DejaVu Sans Mono", monospace;
   --ink: #111;
   --paper: #fff;
   --surface: #ececec;
