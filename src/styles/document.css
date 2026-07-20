@@ -38,6 +38,40 @@
   padding: 19mm 19mm 10mm;
 }
 
+/* Screen-only pagination: paginateDocBody() in app.ts clones .doc-body's
+   content into one .doc-page-slot per A4 page, each clipping a different
+   297mm-tall window via a shifted .doc-page-inner. Padding lives on the
+   shifted inner copy (not the clipping slot), so it only ever appears once,
+   at the true top of the flow, matching how print's own box fragmentation
+   doesn't repeat padding per physical page. */
+.doc-page-slot {
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+}
+
+.doc-page-inner {
+  width: 210mm;
+  display: flex;
+  flex-direction: column;
+  padding: 19mm 19mm 10mm;
+}
+
+@media print {
+  .doc-page-slot {
+    height: auto;
+    overflow: visible;
+  }
+
+  .doc-page-slot:not(:first-of-type) {
+    display: none;
+  }
+
+  .doc-page-inner {
+    margin-top: 0 !important;
+  }
+}
+
 .header-grid {
   display: flex;
   justify-content: space-between;
@@ -63,6 +97,8 @@ table.invoice-data td:last-child {
 
 .doc-text {
   margin: 22pt 0 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 .order-title {
@@ -137,6 +173,8 @@ table.items tr.double-line div {
 table.payment {
   border-collapse: collapse;
   margin-top: 26pt;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 table.payment td {

@@ -20,6 +20,9 @@ const sheet = query<HTMLDivElement>("#sheet");
 const documentSelect = query<HTMLSelectElement>("#document-select");
 const itemsBody = query<HTMLTableSectionElement>("#items-body");
 
+const MM_TO_PX = 96 / 25.4;
+const PAGE_HEIGHT_MM = 297;
+
 init();
 
 function init(): void {
@@ -35,6 +38,10 @@ function init(): void {
   bindYamlButtons();
   refreshEditor();
   renderPreview();
+  // Custom fonts use font-display:block, so the very first pagination
+  // measurement can run against fallback-font metrics; re-measure once the
+  // real fonts are in so the page count/split points are accurate.
+  document.fonts.ready.then(() => renderPreview());
 }
 
 function persist(): void {
@@ -46,6 +53,70 @@ function persist(): void {
 function renderPreview(): void {
   sheet.innerHTML = renderSheet(current, settings, previewMode);
   sheet.className = `sheet ${previewMode}`;
+  paginateDocBody();
+}
+
+const PAGE_BOTTOM_MARGIN_MM = 8;
+
+// The browser's native print pagination already splits an overflowing
+// .doc-body across multiple physical pages correctly, but on screen it just
+// renders as one tall box. This clips it into page-height "windows" onto the
+// same flowed content (via negative margin-top per slot) purely for visual
+// preview; @media print resets the clipping so print still uses the single
+// natural flow it already handles correctly.
+//
+// Break points land between .doc-body's top-level children (never inside
+// one, so a paragraph or table is never cut mid-content) and each non-final
+// page only fills up to PAGE_HEIGHT_MM - PAGE_BOTTOM_MARGIN_MM, leaving a
+// blank buffer before the next page starts instead of running flush to
+// the edge.
+function paginateDocBody(): void {
+  const docBody = sheet.querySelector<HTMLElement>(".doc-body");
+  if (!docBody) return;
+
+  const fullPageHeightPx = PAGE_HEIGHT_MM * MM_TO_PX;
+  const docBodyTop = docBody.getBoundingClientRect().top;
+  const totalHeight = docBody.getBoundingClientRect().height;
+  if (totalHeight <= fullPageHeightPx) return;
+
+  const pageBudgetPx = (PAGE_HEIGHT_MM - PAGE_BOTTOM_MARGIN_MM) * MM_TO_PX;
+  const childBottoms = [...docBody.children].map(
+    (child) => child.getBoundingClientRect().bottom - docBodyTop,
+  );
+
+  const pageStartOffsets = [0];
+  let currentPageStart = 0;
+  let lastChildBottom = 0;
+  for (const bottom of childBottoms) {
+    if (bottom - currentPageStart > pageBudgetPx && lastChildBottom > currentPageStart) {
+      currentPageStart = lastChildBottom;
+      pageStartOffsets.push(currentPageStart);
+    }
+    // A single child (e.g. one long paragraph) can still be taller than a
+    // whole page's budget even starting fresh on its own page; fall back to
+    // forced breaks within it rather than letting it silently overflow past
+    // the slot's overflow:hidden clip.
+    while (bottom - currentPageStart > pageBudgetPx) {
+      currentPageStart += pageBudgetPx;
+      pageStartOffsets.push(currentPageStart);
+    }
+    lastChildBottom = bottom;
+  }
+  if (pageStartOffsets.length <= 1) return;
+
+  const innerHtml = docBody.innerHTML;
+  const fragment = document.createDocumentFragment();
+  for (const startOffsetPx of pageStartOffsets) {
+    const slot = document.createElement("div");
+    slot.className = "doc-page-slot";
+    const inner = document.createElement("div");
+    inner.className = "doc-page-inner";
+    inner.style.marginTop = `${-startOffsetPx}px`;
+    inner.innerHTML = innerHtml;
+    slot.append(inner);
+    fragment.append(slot);
+  }
+  docBody.replaceWith(fragment);
 }
 
 function bindSettingsInputs(): void {
