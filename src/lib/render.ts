@@ -1,6 +1,6 @@
 import { SwissQRBill } from "swissqrbill/svg";
-import type { BillDocument, DocumentMode, Settings } from "./types";
-import { computeTotals } from "./types";
+import type { BillDocument, DocumentMode, LineItem, Settings } from "./types";
+import { computeTotals, isPriced } from "./types";
 import {
   compactIban,
   escapeHtml,
@@ -52,18 +52,7 @@ export function renderSheet(
     .map(escapeHtml)
     .join("<br>");
 
-  const itemRows = doc.items
-    .map(
-      (item, index) => `
-        <tr class="item">
-          <td class="pos">${index + 1}</td>
-          <td>${escapeHtml(item.description)}</td>
-          <td class="num">${formatMoney(item.unitPrice)}</td>
-          <td class="num">${escapeHtml(`${formatQuantity(item.quantity)} ${item.unit}`.trim())}</td>
-          <td class="num">${formatMoney(item.quantity * item.unitPrice)}</td>
-        </tr>`,
-    )
-    .join("");
+  const itemRows = renderItemRows(doc.items);
 
   const doubleLine = `<tr class="double-line"><td colspan="5"><div></div></td></tr>`;
   const totalsRows = doc.vatEnabled
@@ -142,6 +131,43 @@ export function renderSheet(
       </div>
     </div>
     ${mode === "rechnung" ? renderQrPage(doc, settings, totals.total) : ""}`;
+}
+
+function renderItemRows(items: LineItem[], depth = 0): string {
+  return items
+    .map((item, index) => {
+      const pos = depth === 0 ? String(index + 1) : "";
+      const indentStyle =
+        depth > 0 ? ` style="padding-left: ${depth * 12}pt"` : "";
+      const description = `${depth > 0 ? "– " : ""}${escapeHtml(item.description)}`;
+
+      if (item.items && item.items.length > 0) {
+        return `
+          <tr class="item section">
+            <td class="pos">${pos}</td>
+            <td${indentStyle}>${description}</td>
+            <td class="num"></td>
+            <td class="num"></td>
+            <td class="num"></td>
+          </tr>
+          ${renderItemRows(item.items, depth + 1)}`;
+      }
+
+      const priced = isPriced(item);
+      const quantity = item.quantity ?? 1;
+      const unit = item.unit ?? "";
+      const amount = priced ? quantity * item.unitPrice! : undefined;
+
+      return `
+        <tr class="item">
+          <td class="pos">${pos}</td>
+          <td${indentStyle}>${description}</td>
+          <td class="num">${priced ? formatMoney(item.unitPrice!) : ""}</td>
+          <td class="num">${priced ? escapeHtml(`${formatQuantity(quantity)} ${unit}`.trim()) : ""}</td>
+          <td class="num">${amount !== undefined ? formatMoney(amount) : ""}</td>
+        </tr>`;
+    })
+    .join("");
 }
 
 function renderQrPage(doc: BillDocument, settings: Settings, total: number): string {

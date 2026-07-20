@@ -2,9 +2,10 @@ export type DocumentMode = "offerte" | "rechnung";
 
 export interface LineItem {
   description: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
+  quantity?: number;
+  unit?: string;
+  unitPrice?: number;
+  items?: LineItem[];
 }
 
 export interface BillDocument {
@@ -107,11 +108,20 @@ export function suggestNumber(documents: BillDocument[]): string {
   return `${prefix}${String(next).padStart(3, "0")}`;
 }
 
+export function isPriced(item: LineItem): boolean {
+  return item.unitPrice !== undefined;
+}
+
+export function itemAmount(item: LineItem): number {
+  if (item.items) {
+    return item.items.reduce((sum, child) => sum + itemAmount(child), 0);
+  }
+  if (!isPriced(item)) return 0;
+  return (item.quantity ?? 1) * item.unitPrice!;
+}
+
 export function computeTotals(doc: BillDocument): Totals {
-  const subtotal = doc.items.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
-    0,
-  );
+  const subtotal = doc.items.reduce((sum, item) => sum + itemAmount(item), 0);
   const vat = doc.vatEnabled ? subtotal * (doc.vatRate / 100) : 0;
   return { subtotal, vat, total: subtotal + vat };
 }

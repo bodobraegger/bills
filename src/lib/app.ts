@@ -118,21 +118,33 @@ function refreshItemRows(): void {
 
 function buildItemRow(item: LineItem, index: number): HTMLTableRowElement {
   const row = document.createElement("tr");
+  const hasChildren = Boolean(item.items && item.items.length > 0);
 
   row.append(
     itemCell(item.description, "text", "Beschreibung", (value) => {
       item.description = value;
     }),
-    itemCell(String(item.quantity), "number", "", (value) => {
-      item.quantity = Number.parseFloat(value) || 0;
-    }),
-    itemCell(item.unit, "text", "h", (value) => {
-      item.unit = value;
-    }),
-    itemCell(String(item.unitPrice), "number", "0.00", (value) => {
-      item.unitPrice = Number.parseFloat(value) || 0;
-    }),
   );
+
+  if (hasChildren) {
+    const summary = document.createElement("td");
+    summary.colSpan = 3;
+    summary.className = "item-summary";
+    summary.textContent = `${item.items!.length} verschachtelte Positionen (nur per YAML bearbeitbar)`;
+    row.append(summary);
+  } else {
+    row.append(
+      itemCell(String(item.quantity ?? ""), "number", "", (value) => {
+        item.quantity = Number.parseFloat(value) || 0;
+      }),
+      itemCell(item.unit ?? "", "text", "h", (value) => {
+        item.unit = value;
+      }),
+      itemCell(String(item.unitPrice ?? ""), "number", "0.00", (value) => {
+        item.unitPrice = Number.parseFloat(value) || 0;
+      }),
+    );
+  }
 
   const removeCell = document.createElement("td");
   const removeButton = document.createElement("button");

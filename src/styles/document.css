@@ -1,6 +1,6 @@
 @font-face {
   font-family: "New Computer Modern Mono";
-  src: url("/fonts/NewCMMono10-Regular.woff2") format("woff2");
+  src: url("../assets/fonts/NewCMMono10-Regular.woff2") format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -109,6 +109,10 @@ table.items td.num:nth-child(3) {
 
 table.items tr.item:last-of-type td {
   border-bottom: var(--rule);
+}
+
+table.items tr.section td {
+  font-weight: bold;
 }
 
 table.items .totals-label {
