@@ -9,6 +9,7 @@ import {
   saveSettings,
 } from "./storage";
 import { renderSheet } from "./render";
+import { documentFromYaml, documentToYaml } from "./yaml";
 
 let settings: Settings = loadSettings();
 let documents: BillDocument[] = loadDocuments();
@@ -31,6 +32,7 @@ function init(): void {
   bindSettingsInputs();
   bindDocumentInputs();
   bindToolbar();
+  bindYamlButtons();
   refreshEditor();
   renderPreview();
 }
@@ -241,6 +243,44 @@ function bindToolbar(): void {
       printAs(button.dataset.print as DocumentMode);
     });
   }
+}
+
+function bindYamlButtons(): void {
+  query<HTMLButtonElement>("#export-yaml").addEventListener("click", () => {
+    const blob = new Blob([documentToYaml(current)], { type: "text/yaml" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${current.number || "dokument"}.yaml`;
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
+  const fileInput = query<HTMLInputElement>("#import-yaml-input");
+  query<HTMLButtonElement>("#import-yaml").addEventListener("click", () => {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = "";
+    if (!file) return;
+    file
+      .text()
+      .then((text) => {
+        const doc = documentFromYaml(text);
+        if (!doc.number) doc.number = suggestNumber(documents);
+        documents.push(doc);
+        current = doc;
+        persist();
+        refreshEditor();
+        renderPreview();
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        alert(`YAML konnte nicht importiert werden: ${message}`);
+      });
+  });
 }
 
 function updateModeButtons(): void {

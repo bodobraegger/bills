@@ -23,6 +23,11 @@ import "../styles/document.css";
             <button type="button" id="new-document" title="Neues Dokument">+</button>
             <button type="button" id="delete-document" title="Dokument löschen">🗑</button>
           </div>
+          <div class="document-bar">
+            <button type="button" id="export-yaml">YAML exportieren</button>
+            <button type="button" id="import-yaml">YAML importieren</button>
+            <input type="file" id="import-yaml-input" accept=".yaml,.yml" hidden />
+          </div>
         </header>
 
         <section class="fields">
