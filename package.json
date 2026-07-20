@@ -13,9 +13,11 @@
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
     "astro": "^7.1.1",
+    "js-yaml": "^5.2.1",
     "swissqrbill": "^4.4.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "typescript": "^7.0.2"
   },
   "type": "module",
