@@ -97,8 +97,6 @@ table.invoice-data td:last-child {
 
 .doc-text {
   margin: 22pt 0 0;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 .order-title {
@@ -173,8 +171,6 @@ table.items tr.double-line div {
 table.payment {
   border-collapse: collapse;
   margin-top: 26pt;
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
 
 table.payment td {
