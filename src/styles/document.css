@@ -11,6 +11,17 @@
   margin: 0;
 }
 
+/* Named page for .doc-body's print flow: gives every physical page it
+   fragments across the same real top/bottom/side margins (unlike the
+   default unnamed @page above, kept at margin:0 for .qr-page, which the
+   QR-bill standard requires flush at the physical page edges). This is
+   ordinary CSS Paged Media, unlike box-decoration-break (which doesn't
+   reliably repeat padding across genuine page fragments in Chromium, only
+   spans/columns) — must match app.ts's PAGE_MARGIN_TOP_MM/BOTTOM_MM. */
+@page doc {
+  margin: 19mm 19mm 10mm;
+}
+
 .sheet {
   --rule: 0.5pt solid #000;
   font-family: "New Computer Modern Mono", "Courier New", monospace;
@@ -27,25 +38,31 @@
 }
 
 @media print {
-  .doc-body,
-  .qr-page,
-  .doc-page-slot {
+  .qr-page {
     min-height: 296mm;
   }
 }
 
-/* box-decoration-break:clone makes the browser repeat this padding on every
-   physical page a fragmented box spans, instead of only once at the very
-   start/end of the flow (the CSS fragmentation default, "slice") — this is
-   what gives every printed page real top/bottom margins, not just the
-   first/last. Both app.ts's PAGE_MARGIN_TOP_MM/PAGE_MARGIN_BOTTOM_MM and
-   .doc-page-slot's padding below must match these values. */
 .doc-body {
   display: flex;
   flex-direction: column;
   padding: 19mm 19mm 10mm;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+}
+
+@media print {
+  /* @page doc now supplies the margin on every physical page; the element's
+     own padding/width would double up on top of that, 210mm is wider than
+     the content area @page doc leaves after its side margins, and a
+     297mm min-height would force every physical page's content area
+     (only 297-19-10=268mm after @page doc's margins) to overflow into an
+     extra page even for a short, single-page document. */
+  .doc-body,
+  .doc-page-inner {
+    page: doc;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+  }
 }
 
 /* Screen-only pagination: paginateDocBody() in app.ts clones .doc-body's
@@ -53,7 +70,7 @@
    Each slot supplies its own fresh 19mm/19mm/10mm padding (box-sizing:
    border-box keeps the slot exactly 297mm tall including it) and clips a
    268mm-tall content window via a shifted .doc-page-inner, mirroring what
-   box-decoration-break:clone does for print. */
+   @page doc gives print for free. */
 .doc-page-slot {
   height: 297mm;
   display: flex;
@@ -61,14 +78,16 @@
   padding: 19mm 19mm 10mm;
   box-sizing: border-box;
   overflow: hidden;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
 }
 
 @media print {
+  /* display:contents drops the slot's own box (padding, width, sizing —
+     all of it) so only .doc-page-inner's page:doc box model applies; only
+     the first slot is shown since print re-fragments the full, unclipped
+     content on its own via @page doc, same as the un-paginated .doc-body
+     case does. */
   .doc-page-slot {
-    height: auto;
-    overflow: visible;
+    display: contents;
   }
 
   .doc-page-slot:not(:first-of-type) {
