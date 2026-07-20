@@ -29,9 +29,11 @@
   }
 }
 
+/* Plain block flow, not flex: none of these children need flex alignment,
+   and Chromium's print pagination has known bugs combining forced breaks
+   (break-before:page) with break-inside:avoid inside a flex container —
+   block-level fragmentation is the mature, reliable part of the spec. */
 .doc-body {
-  display: flex;
-  flex-direction: column;
   padding: 19mm 19mm 10mm;
 
   /* Internal breaks are children of this padded box, so without this they'd
