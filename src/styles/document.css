@@ -79,6 +79,16 @@
   align-items: flex-start;
 }
 
+/* paginateDocBody() (app.ts) clones .header-grid to the top of every page
+   after the first, and appends one of these before each page break so
+   every page but the last says so at the bottom. */
+.doc-continued-note {
+  margin: 8pt 0 0;
+  font-size: 9pt;
+  font-style: italic;
+  text-align: right;
+}
+
 table.invoice-data {
   border: var(--rule);
   border-collapse: collapse;

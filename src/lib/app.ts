@@ -85,35 +85,60 @@ const PAGE_MARGIN_BOTTOM_MM = 10;
 // one, so a paragraph or table is never cut mid-content) unless a child
 // carries the page-break-before marker (from a manual <pb> in the source
 // text — see renderTextBlocks in format.ts), which always forces a break.
+function measureOuterHeight(el: Element): number {
+  const style = getComputedStyle(el);
+  return (
+    el.getBoundingClientRect().height +
+    (Number.parseFloat(style.marginTop) || 0) +
+    (Number.parseFloat(style.marginBottom) || 0)
+  );
+}
+
 function paginateDocBody(): void {
   const docBody = sheet.querySelector<HTMLElement>(".doc-body");
   if (!docBody) return;
+  const headerGrid = docBody.querySelector<HTMLElement>(".header-grid");
+  if (!headerGrid) return;
 
   const fullPageHeightPx = PAGE_HEIGHT_MM * MM_TO_PX;
   const paddingTopPx = PAGE_MARGIN_TOP_MM * MM_TO_PX;
   const paddingBottomPx = PAGE_MARGIN_BOTTOM_MM * MM_TO_PX;
-  const contentBudgetPx = fullPageHeightPx - paddingTopPx - paddingBottomPx;
+  const baseContentBudgetPx = fullPageHeightPx - paddingTopPx - paddingBottomPx;
 
-  // Runs even for a single-page document (no internal breaks needed) since
-  // the trailing pageHeightSoFar is also used below to size the QR-page
-  // divider, which needs to know how much of the last doc-body page is
-  // already used.
+  // Measured once per run: the "continued" note reserves room on every
+  // page's budget (it's only actually placed on pages that turn out not to
+  // be last, but which page is last isn't known in advance — see the
+  // .qr-page-transition margin comment below for the same trade-off), and
+  // the repeated header reserves room on every page except the first,
+  // which already has the real one.
+  const continuedNote = document.createElement("p");
+  continuedNote.className = "doc-continued-note";
+  continuedNote.textContent = "(Fortsetzung auf der nächsten Seite)";
+  docBody.append(continuedNote);
+  const continuedNoteHeight = measureOuterHeight(continuedNote);
+  continuedNote.remove();
+  const headerCloneHeight = measureOuterHeight(headerGrid);
+
+  const budgetForPage = (pageIndex: number) =>
+    baseContentBudgetPx - continuedNoteHeight - (pageIndex > 0 ? headerCloneHeight : 0);
+
+  let pageIndex = 0;
+  // Starts at headerCloneHeight/1, not 0, on every page after the first:
+  // paginateDocBody() inserts a repeated header at the top of each new page
+  // (see below), which itself counts as this page's first "child" for
+  // budget and redundant-break-detection purposes.
   let pageHeightSoFar = 0;
-  let hadInternalBreak = false;
   let childrenOnCurrentPage = 0;
   let previousBreakWasForced = false;
   for (const child of [...docBody.children]) {
     if (child instanceof HTMLElement && child.classList.contains("doc-page-break")) {
       continue;
     }
-    const style = getComputedStyle(child);
-    const childHeight =
-      child.getBoundingClientRect().height +
-      (Number.parseFloat(style.marginTop) || 0) +
-      (Number.parseFloat(style.marginBottom) || 0);
+    const childHeight = measureOuterHeight(child);
     const forceBreak =
       child instanceof HTMLElement && child.classList.contains("page-break-before");
-    const overflow: boolean = pageHeightSoFar + childHeight > contentBudgetPx;
+    const budget = budgetForPage(pageIndex);
+    const overflow: boolean = pageHeightSoFar + childHeight > budget;
     // A <pb> landing right after another break (this page has had exactly
     // one child so far) would strand that lone child alone on a near-empty
     // page — redundant with the break that just happened, unless that prior
@@ -124,33 +149,48 @@ function paginateDocBody(): void {
     const effectiveForceBreak: boolean = forceBreak && !redundantForce;
 
     if (pageHeightSoFar > 0 && (effectiveForceBreak || overflow)) {
+      const note = continuedNote.cloneNode(true) as HTMLElement;
+      docBody.insertBefore(note, child);
+
       const spacer = document.createElement("div");
       spacer.className = "doc-page-break doc-page-break--forced";
-      spacer.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
+      spacer.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - continuedNoteHeight - paddingTopPx}px`;
       spacer.style.paddingBottom = `${paddingBottomPx}px`;
       docBody.insertBefore(spacer, child);
-      pageHeightSoFar = 0;
-      childrenOnCurrentPage = 0;
+
+      const headerClone = headerGrid.cloneNode(true) as HTMLElement;
+      docBody.insertBefore(headerClone, child);
+
+      pageIndex++;
+      pageHeightSoFar = headerCloneHeight;
+      childrenOnCurrentPage = 1;
       previousBreakWasForced = effectiveForceBreak;
-      hadInternalBreak = true;
     }
     pageHeightSoFar += childHeight;
     childrenOnCurrentPage++;
   }
 
   // The plain (non --forced) divider rendered in render.ts right before
-  // .qr-page, if this is a Rechnung — same "fill out the rest of the
-  // current page" treatment as an internal break, for a consistent look
+  // .qr-page, if this is a Rechnung: doc-body's last page is never actually
+  // the last page of the document in that case, so it always gets a
+  // "continued" note too, and the same "fill out the rest of the current
+  // page" margin treatment an internal break gets, for a consistent look
   // between an ordinary content page break and the transition into the
-  // QR-bill page. Only needed when doc-body actually spans multiple pages:
-  // for a single-page document, .doc-body's own min-height:297mm already
-  // pads it out to a full page's worth of blank space, so adding this too
-  // would double it.
+  // QR-bill page. That margin is skipped only when doc-body fits on a
+  // single page with no repeated header/note added at all — its own
+  // min-height:297mm already pads it out to a full page, and adding this
+  // too would double it.
   const qrDivider = docBody.nextElementSibling;
   if (qrDivider instanceof HTMLElement && qrDivider.classList.contains("doc-page-break")) {
-    qrDivider.style.marginTop = hadInternalBreak
-      ? `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`
-      : "0px";
+    const singleUnpaddedPage = pageIndex === 0 && childrenOnCurrentPage === 1;
+    if (singleUnpaddedPage) {
+      qrDivider.style.marginTop = "0px";
+    } else {
+      const note = continuedNote.cloneNode(true) as HTMLElement;
+      docBody.append(note);
+      pageHeightSoFar += continuedNoteHeight;
+      qrDivider.style.marginTop = `${fullPageHeightPx - pageHeightSoFar - paddingTopPx}px`;
+    }
   }
 }
 

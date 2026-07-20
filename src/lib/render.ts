@@ -125,7 +125,7 @@ export function renderSheet(
       ${renderTextBlocks(doc.outroText, "doc-text")}
 
       ${paymentLines ? `<table class="payment"><tbody>${paymentLines}</tbody></table>` : ""}
-      ${mode === "rechnung" ? `<p class="qr-note">Der QR-Zahlteil befindet sich auf Seite 2.</p>` : ""}
+      ${mode === "rechnung" ? `<p class="qr-note">Der QR-Zahlteil befindet sich auf der letzten Seite.</p>` : ""}
 
       <div class="closing">
         <div>***</div>
