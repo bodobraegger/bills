@@ -10,6 +10,7 @@ import {
 } from "./storage";
 import { renderSheet } from "./render";
 import { documentFromYaml, documentToYaml } from "./yaml";
+import exampleDocumentYaml from "./example-document.yaml?raw";
 
 let settings: Settings = loadSettings();
 let documents: BillDocument[] = loadDocuments();
@@ -27,7 +28,17 @@ init();
 
 function init(): void {
   if (documents.length === 0) {
-    documents.push(createDocument(suggestNumber(documents)));
+    const example = documentFromYaml(exampleDocumentYaml);
+    documents.push(example.document);
+    // On a real first visit there's no stored settings yet, so the example's
+    // sender doubles as a filled-in preview of the "Absender & IBAN" fields;
+    // a self-hosted deployment that already configures its own
+    // PUBLIC_DEFAULT_* sender (see defaultSettings() in types.ts) keeps that
+    // instead of being overwritten by the demo sender.
+    if (example.sender && !settings.name) {
+      settings = example.sender;
+      saveSettings(settings);
+    }
   }
   current =
     documents.find((doc) => doc.id === loadCurrentId()) ?? documents[0]!;

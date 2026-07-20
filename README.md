@@ -17,6 +17,6 @@ Das Layout folgt der [usgc-invoice](https://github.com/usgraphics/usgc-invoice) 
 
 Links Dokument bearbeiten (Kunde, Positionen, Texte), rechts die A4-Vorschau. Ein Dokument teilt sich alle Daten zwischen Offerte und Rechnung; die beiden Buttons oben rechts öffnen den Browser-Druckdialog im jeweiligen Modus, dort "Als PDF speichern" wählen. Die Rechnung enthält den QR-Zahlteil (Empfangsschein + Zahlteil, via [swissqrbill](https://github.com/schoero/swissqrbill)) am unteren Blattrand.
 
-Absender, IBAN, MWST-Nr. usw. unter "Absender & IBAN" im Formular; Standardwerte kommen aus `.env` (`defaultSettings` in `src/lib/types.ts`).
+Absender, IBAN, MWST-Nr. usw. unter "Absender & IBAN" im Formular; ohne eigene `.env`-Werte übernimmt ein neuer Browser beim ersten Laden das Beispieldokument aus `src/lib/example-document.yaml` (inkl. Absender), sobald noch nichts im localStorage liegt. Eigene Standardwerte (z.B. für ein selbst gehostetes Deployment) weiterhin über `.env` (`defaultSettings` in `src/lib/types.ts`) setzen, die haben Vorrang vor dem Beispiel.
 
 Hinweis: Die hinterlegte IBAN ist eine normale IBAN (keine QR-IBAN), daher wird keine QR-Referenz erzeugt; die Rechnungsnummer steht im Feld "Zusätzliche Informationen".

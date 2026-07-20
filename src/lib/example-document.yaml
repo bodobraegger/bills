@@ -1,0 +1,38 @@
+number: "2026-001"
+date: "2026-07-20"
+dueDate: "2026-08-19"
+currency: CHF
+vat:
+  enabled: false
+  rate: 8.1
+sender:
+  name: Bodo Brägger
+  address: Musterstrasse 1
+  zip: "8000"
+  city: Zürich
+  country: CH
+  iban: "CH68 0024 0240 7324 3412 1"
+  email: bodo@bbo.do
+client:
+  name: Beispiel AG
+  address: Musterweg 12
+  zip: "3000"
+  city: Bern
+intro: |
+  Vielen Dank für Ihr Vertrauen. Nachfolgend erhalten Sie die Rechnung für die im Juli erbrachten Leistungen.
+items:
+  - description: Konzeption & Design
+    quantity: 8
+    unit: h
+    unitPrice: 120
+  - description: Entwicklung
+    quantity: 16
+    unit: h
+    unitPrice: 120
+  - description: Projektmanagement
+    quantity: 4
+    unit: h
+    unitPrice: 120
+outro: |
+  Der Rechnungsbetrag ist innert 30 Tagen ab Rechnungsdatum zur Zahlung fällig. Für Rückfragen stehe ich Ihnen jederzeit gerne zur Verfügung.
+goodbye: Besten Dank für Ihr Vertrauen.
