@@ -75,10 +75,17 @@
   }
 }
 
+/* Grid, not flex: Chromium has the same forced-break fragmentation bug for
+   flex containers noted above for .doc-body, and this element (the header
+   clone paginateDocBody() repeats at the top of every page after the first)
+   sits directly after a forced break, so it hit that bug too, splitting
+   across the page seam in print despite looking fine in the screen preview. */
 .header-grid {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 /* .doc-body's own top padding only applies once, at the true start of its
